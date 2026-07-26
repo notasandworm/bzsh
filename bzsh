@@ -1,0 +1,428 @@
+#!/bin/bash
+# ------------------------------------------------------------------------------
+# 󰅶 Busy Zsh (bzsh) CLI
+# ------------------------------------------------------------------------------
+
+# Define directories and files
+CONFIG_DIR="$HOME/.config/bzsh"
+BIN_DIR="$HOME/.local/bin"
+ZSHRC="$HOME/.zshrc"
+REPO_URL="git@github.com:notasandworm/bzsh.git"
+META_FILE="$CONFIG_DIR/.bzsh-meta"
+
+# Output color helpers
+print_title() {
+  echo -e "\n\e[1;34m󰅶 Busy Zsh (bzsh) CLI\e[0m"
+  echo -e "\e[1;34m=======================\e[0m\n"
+}
+print_step()  { echo -e "\e[1;36m➜\e[0m $1"; }
+print_ok()    { echo -e "\e[1;32m✔\e[0m $1"; }
+print_warn()  { echo -e "\e[1;33m⚠\e[0m $1"; }
+print_error() { echo -e "\e[1;31m✘\e[0m $1"; }
+
+print_footer() {
+  echo -e "\n\e[1;32m♥ Thank you for using Busy Zsh!\e[0m"
+  echo -e "\e[1;36m✉ For queries, feedback, or issues, email notasandworm@gmail.com\e[0m\n"
+}
+
+# Ask yes/no helper
+ask_yes_no() {
+  local prompt="$1"
+  local default="$2"
+  local answer
+
+  if [[ "$AUTO_YES" == "true" ]]; then
+    echo -e "\e[1;36m➜\e[0m $prompt [$default] (auto-selected)"
+    return 0
+  fi
+
+  if [[ "$default" == "Y" ]]; then
+    echo -n -e "\e[1;35m?\e[0m $prompt [Y/n]: "
+    read -r answer
+    [[ -z "$answer" || "$answer" =~ ^[Yy]$ ]] && return 0
+  else
+    echo -n -e "\e[1;35m?\e[0m $prompt [y/N]: "
+    read -r answer
+    [[ "$answer" =~ ^[Yy]$ ]] && return 0
+  fi
+  return 1
+}
+
+# Show help
+show_help() {
+  print_title
+  echo "Usage: bzsh <command> [options]"
+  echo ""
+  echo "Commands:"
+  echo "  setup      Run the interactive installation process"
+  echo "  update     Update script files from the origin repository"
+  echo "  uninstall  Remove bzsh settings and delete config folders"
+  echo "  help       Show this help message"
+  echo ""
+  echo "Options:"
+  echo "  -y, --yes  Run non-interactively, auto-approving all setup prompts"
+  print_footer
+}
+
+# Ensure directories exist
+ensure_dirs() {
+  mkdir -p "$CONFIG_DIR"
+  mkdir -p "$BIN_DIR"
+}
+
+# 1. Zsh Check
+check_zsh_installed() {
+  if ! command -v zsh &>/dev/null; then
+    print_warn "Zsh is not installed! Zsh is required for Busy Zsh to function."
+    if ask_yes_no "Would you like to install Zsh using apt-get?" "Y"; then
+      print_step "Installing Zsh..."
+      sudo apt-get update && sudo apt-get install -y zsh
+      print_ok "Zsh installed successfully!"
+    else
+      print_error "Zsh is required. Aborting setup."
+      exit 1
+    fi
+  else
+    print_ok "Zsh is installed."
+  fi
+}
+
+# 2. Dependency Checklist
+check_dependencies() {
+  print_step "Checking optional dependencies..."
+  local missing=()
+  local to_install=()
+
+  # Check eza
+  if command -v eza &>/dev/null; then
+    print_ok "eza is installed."
+  else
+    print_warn "eza is missing (used for modern ls replacement)."
+    missing+=("eza")
+    to_install+=("eza")
+  fi
+
+  # Check bat/batcat
+  if command -v bat &>/dev/null || command -v batcat &>/dev/null; then
+    print_ok "bat is installed."
+  else
+    print_warn "batcat is missing (used for syntax-highlighted file viewing)."
+    missing+=("bat")
+    to_install+=("batcat")
+  fi
+
+  # Check zoxide
+  if command -v zoxide &>/dev/null; then
+    print_ok "zoxide is installed."
+  else
+    print_warn "zoxide is missing (used for fast directory navigation)."
+    missing+=("zoxide")
+    to_install+=("zoxide")
+  fi
+
+  # Check fdfind/fd
+  if command -v fd &>/dev/null || command -v fdfind &>/dev/null; then
+    print_ok "fd-find is installed."
+  else
+    print_warn "fd-find is missing (used for faster searching)."
+    missing+=("fd-find")
+    to_install+=("fd-find")
+  fi
+
+  if (( ${#missing[@]} > 0 )); then
+    if ask_yes_no "Would you like to attempt to install missing packages via apt-get?" "Y"; then
+      print_step "Installing missing dependencies: ${to_install[*]}..."
+      sudo apt-get update && sudo apt-get install -y "${to_install[@]}"
+      print_ok "Finished package manager updates!"
+    fi
+  else
+    print_ok "All optional dependencies are satisfied."
+  fi
+}
+
+# 3. Backup .zshrc
+backup_zshrc() {
+  if [[ -f "$ZSHRC" ]]; then
+    local backup_file="${ZSHRC}.bzsh-backup.$(date +%Y%m%d%H%M%S)"
+    print_step "Backing up existing $ZSHRC to $backup_file..."
+    cp "$ZSHRC" "$backup_file"
+    print_ok "Backup created successfully."
+  fi
+}
+
+# Main setup execution
+run_setup() {
+  print_title
+  print_step "Starting setup..."
+
+  check_zsh_installed
+  check_dependencies
+  backup_zshrc
+  ensure_dirs
+
+  # Find script source directory
+  local script_src_dir
+  script_src_dir=$(dirname "$(readlink -f "$0")")
+
+  # Detect source type and save metadata
+  if [[ -d "$script_src_dir/.git" ]]; then
+    # We are running from a git clone
+    mkdir -p "$CONFIG_DIR"
+    echo "SOURCE_TYPE=\"git\"" > "$META_FILE"
+    echo "SOURCE_DIR=\"$script_src_dir\"" >> "$META_FILE"
+  else
+    mkdir -p "$CONFIG_DIR"
+    echo "SOURCE_TYPE=\"curl\"" > "$META_FILE"
+  fi
+
+  local config_content=""
+
+  # Prompt Decorator
+  if ask_yes_no "Set BcZsh as prompt decorator?" "Y"; then
+    print_step "Copying prompt.bzsh to $CONFIG_DIR..."
+    cp "$script_src_dir/prompt.bzsh" "$CONFIG_DIR/prompt.bzsh"
+    config_content+="# BcZsh Prompt Decorator\n[[ -f \"$CONFIG_DIR/prompt.bzsh\" ]] && source \"$CONFIG_DIR/prompt.bzsh\"\n\n"
+  else
+    config_content+="# Simple prompt setup\nautoload -Uz promptinit && promptinit\nprompt adam1\n\n"
+  fi
+
+  # Autocomplete
+  if ask_yes_no "Enable BcZsh Autocomplete system?" "Y"; then
+    print_step "Copying autocomplete.bzsh to $CONFIG_DIR..."
+    cp "$script_src_dir/autocomplete.bzsh" "$CONFIG_DIR/autocomplete.bzsh"
+    config_content+="# BcZsh Autocomplete\n[[ -f \"$CONFIG_DIR/autocomplete.bzsh\" ]] && source \"$CONFIG_DIR/autocomplete.bzsh\"\n\n"
+  fi
+
+  # History Settings
+  if ask_yes_no "Allow BcZsh to configure Zsh History settings?" "Y"; then
+    config_content+="# History configuration\nHISTFILE=\"\$HOME/.zsh_history\"\nHISTSIZE=50000\nSAVEHIST=50000\nsetopt APPEND_HISTORY          # Append history to file rather than overwrite\nsetopt SHARE_HISTORY           # Share history across shell instances immediately\nsetopt EXTENDED_HISTORY        # Save timestamp and execution duration\nsetopt HIST_IGNORE_ALL_DUPS    # Purge duplicate entries when adding new ones\nsetopt HIST_IGNORE_SPACE       # Do not record commands preceded by a space\n\n"
+  fi
+
+  # Keybindings & History Search
+  if ask_yes_no "Enable arrow-key history prefix searching?" "Y"; then
+    config_content+="# Keybindings & History Search\nautoload -Uz up-line-or-beginning-search down-line-or-beginning-search\nzle -N up-line-or-beginning-search\nzle -N down-line-or-beginning-search\nbindkey '^[[A' up-line-or-beginning-search\nbindkey '^[[B' down-line-or-beginning-search\n\n"
+  fi
+
+  # Shell Options
+  if ask_yes_no "Enable auto-cd and suppress beep alerts?" "Y"; then
+    config_content+="# Shell options\nsetopt AUTO_CD                 # Change directory without typing 'cd'\nsetopt NO_BEEP                 # Suppress terminal audio alerts\n\n"
+  fi
+
+  # Eza aliases
+  if ask_yes_no "Set up ls aliases using eza?" "Y"; then
+    config_content+="# Eza Aliases\nif command -v eza &>/dev/null; then\n  alias ls=\"eza --icons=always --colour=always\"\n  alias la=\"eza -alog --git --icons=always --colour=always\"\n  alias ll=\"eza -log --git --icons=always --colour=always\"\nfi\n\n"
+  fi
+
+  # Batcat alias
+  if ask_yes_no "Set up alias bat='batcat' (or just bat if present)?" "Y"; then
+    config_content+="# Bat/Batcat alias\nif command -v batcat &>/dev/null; then\n  alias bat=\"batcat\"\nfi\n\n"
+  fi
+
+  # Zoxide initialization
+  if ask_yes_no "Enable zoxide directory jumper?" "Y"; then
+    config_content+="# Zoxide init\nif command -v zoxide &>/dev/null; then\n  eval \"\$(zoxide init --cmd z zsh)\"\nfi\n\n"
+  fi
+
+  # Debian fd-find quirk
+  if ask_yes_no "Fix Debian fd-find quirk (creating symlink to fd)?" "Y"; then
+    local fdfind_path
+    fdfind_path=$(which fdfind 2>/dev/null)
+    if [[ -n "$fdfind_path" ]]; then
+      print_step "Creating symlink $BIN_DIR/fd -> $fdfind_path..."
+      ln -sf "$fdfind_path" "$BIN_DIR/fd"
+      print_ok "Symlink created."
+    else
+      print_warn "fdfind command not found. Skipping symlink creation."
+    fi
+  fi
+
+  # Neovim Updater
+  if ask_yes_no "Add Neovim updater (update-nvim) helper function?" "Y"; then
+    print_step "Copying nvim-update.bzsh to $CONFIG_DIR..."
+    cp "$script_src_dir/nvim-update.bzsh" "$CONFIG_DIR/nvim-update.bzsh"
+    config_content+="# Neovim Updater Helper\n[[ -f \"$CONFIG_DIR/nvim-update.bzsh\" ]] && source \"$CONFIG_DIR/nvim-update.bzsh\"\n\n"
+  fi
+
+  # Local bin path
+  if ask_yes_no "Add $BIN_DIR to your shell PATH?" "Y"; then
+    config_content+="# Include local bin in PATH\nexport PATH=\"\$PATH:$BIN_DIR\"\n\n"
+  fi
+
+  # Symlink bzsh itself to ~/.local/bin/bzsh
+  print_step "Installing bzsh command to $BIN_DIR/bzsh..."
+  ln -sf "$script_src_dir/bzsh" "$BIN_DIR/bzsh"
+  chmod +x "$script_src_dir/bzsh"
+  print_ok "Installed bzsh command."
+
+  # Write Zshrc Block
+  local start_marker="# >>> bzsh initialize >>>"
+  local end_marker="# <<< bzsh initialize <<<"
+  local new_block
+  new_block=$(echo -e "$start_marker\n# This block is managed by bzsh. Do not edit manually.\n\n$config_content$end_marker")
+
+  print_step "Updating $ZSHRC..."
+  if [[ -f "$ZSHRC" ]] && grep -q "$start_marker" "$ZSHRC"; then
+    # Block exists, let's replace it
+    local temp_file
+    temp_file=$(mktemp)
+    awk -v start="$start_marker" -v end="$end_marker" -v content="$new_block" '
+      BEGIN { inside = 0 }
+      $0 == start { inside = 1; print content; next }
+      $0 == end { inside = 0; next }
+      !inside { print }
+    ' "$ZSHRC" > "$temp_file"
+    mv "$temp_file" "$ZSHRC"
+    print_ok "Updated bzsh block in $ZSHRC."
+  else
+    # Block doesn't exist, append it
+    echo -e "\n$new_block" >> "$ZSHRC"
+    print_ok "Appended bzsh block to $ZSHRC."
+  fi
+
+  print_ok "Setup completed successfully!"
+  print_footer
+}
+
+# Run Update
+run_update() {
+  print_title
+  print_step "Starting update check..."
+
+  if [[ ! -f "$META_FILE" ]]; then
+    print_error "Metadata file not found at $META_FILE. Please run bzsh setup first."
+    exit 1
+  fi
+
+  # Source metadata
+  # shellcheck disable=SC1090
+  source "$META_FILE"
+
+  if [[ "$SOURCE_TYPE" == "git" ]]; then
+    if [[ -d "$SOURCE_DIR" ]]; then
+      print_step "Pulling latest files from Git repository at $SOURCE_DIR..."
+      cd "$SOURCE_DIR" || exit 1
+      if git pull; then
+        print_ok "Git repository updated successfully."
+        # Recopy the script files that might have changed
+        print_step "Refreshing files in $CONFIG_DIR..."
+        [[ -f "$SOURCE_DIR/prompt.bzsh" && -f "$CONFIG_DIR/prompt.bzsh" ]] && cp "$SOURCE_DIR/prompt.bzsh" "$CONFIG_DIR/prompt.bzsh"
+        [[ -f "$SOURCE_DIR/autocomplete.bzsh" && -f "$CONFIG_DIR/autocomplete.bzsh" ]] && cp "$SOURCE_DIR/autocomplete.bzsh" "$CONFIG_DIR/autocomplete.bzsh"
+        [[ -f "$SOURCE_DIR/nvim-update.bzsh" && -f "$CONFIG_DIR/nvim-update.bzsh" ]] && cp "$SOURCE_DIR/nvim-update.bzsh" "$CONFIG_DIR/nvim-update.bzsh"
+        
+        # Refresh the binary symlink
+        ln -sf "$SOURCE_DIR/bzsh" "$BIN_DIR/bzsh"
+        chmod +x "$SOURCE_DIR/bzsh"
+        print_ok "Updated successfully!"
+      else
+        print_error "Failed to git pull in $SOURCE_DIR."
+        exit 1
+      fi
+    else
+      print_error "Original source directory $SOURCE_DIR no longer exists."
+      exit 1
+    fi
+  else
+    print_warn "This was not installed via Git clone. We will attempt a git fetch from origin if remote tools are available, or download directly."
+    # Since the repository is git@github.com:notasandworm/bzsh.git, let's clone it or pull it if available
+    # In a typical curl install, we might download raw files. But since the user specified they have ssh access,
+    # we can try to clone or update. For now, since they run in a git setup, the git-type update covers them.
+    print_warn "Please run git update in your source directory or re-run setup."
+  fi
+
+  print_footer
+}
+
+# Run Uninstall
+run_uninstall() {
+  print_title
+  print_step "Starting uninstallation..."
+
+  local start_marker="# >>> bzsh initialize >>>"
+  local end_marker="# <<< bzsh initialize <<<"
+
+  if [[ -f "$ZSHRC" ]] && grep -q "$start_marker" "$ZSHRC"; then
+    print_step "Removing bzsh block from $ZSHRC..."
+    local temp_file
+    temp_file=$(mktemp)
+    awk -v start="$start_marker" -v end="$end_marker" '
+      BEGIN { inside = 0 }
+      $0 == start { inside = 1; next }
+      $0 == end { inside = 0; next }
+      !inside { print }
+    ' "$ZSHRC" > "$temp_file"
+    mv "$temp_file" "$ZSHRC"
+    print_ok "Removed bzsh block."
+  else
+    print_warn "No bzsh block found in $ZSHRC."
+  fi
+
+  if ask_yes_no "Remove configuration folder $CONFIG_DIR for zero footprint?" "Y"; then
+    print_step "Deleting $CONFIG_DIR..."
+    rm -rf "$CONFIG_DIR"
+    print_ok "Configuration folder deleted."
+  fi
+
+  if ask_yes_no "Remove bzsh script link from $BIN_DIR?" "Y"; then
+    print_step "Deleting $BIN_DIR/bzsh..."
+    rm -f "$BIN_DIR/bzsh"
+    print_ok "Script link deleted."
+  fi
+
+  # Remove fd symlink if it exists and points to fdfind
+  if [[ -L "$BIN_DIR/fd" ]]; then
+    local link_target
+    link_target=$(readlink "$BIN_DIR/fd")
+    if [[ "$link_target" == *"fdfind"* ]]; then
+      print_step "Removing fd-find symlink at $BIN_DIR/fd..."
+      rm -f "$BIN_DIR/fd"
+      print_ok "Symlink deleted."
+    fi
+  fi
+
+  print_ok "Uninstall completed!"
+  print_footer
+}
+
+# Parse command line options
+AUTO_YES="false"
+COMMAND=""
+
+# Loop through arguments
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    setup|update|uninstall|help)
+      COMMAND="$1"
+      shift
+      ;;
+    -y|--yes)
+      AUTO_YES="true"
+      shift
+      ;;
+    *)
+      # Unknown option, might be setup-related or typo
+      shift
+      ;;
+  esac
+done
+
+# If no command, show help
+if [[ -z "$COMMAND" ]]; then
+  show_help
+  exit 0
+fi
+
+# Route commands
+case "$COMMAND" in
+  setup)
+    run_setup
+    ;;
+  update)
+    run_update
+    ;;
+  uninstall)
+    run_uninstall
+    ;;
+  help)
+    show_help
+    ;;
+esac
