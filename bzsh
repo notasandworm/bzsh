@@ -301,7 +301,9 @@ run_update() {
     if [[ -d "$SOURCE_DIR" ]]; then
       print_step "Pulling latest files from Git repository at $SOURCE_DIR..."
       cd "$SOURCE_DIR" || exit 1
-      if git pull; then
+      local current_branch
+      current_branch=$(git branch --show-current 2>/dev/null)
+      if git pull origin "${current_branch:-main}"; then
         print_ok "Git repository updated successfully."
         # Recopy the script files that might have changed
         print_step "Refreshing files in $CONFIG_DIR..."
