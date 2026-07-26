@@ -48,6 +48,25 @@ ask_yes_no() {
   return 1
 }
 
+# Helper to copy from source directory if present, or download via curl from GitHub if not
+copy_or_download_file() {
+  local filename="$1"
+  local dest="$2"
+  local src_dir="$3"
+
+  if [[ -f "$src_dir/$filename" ]]; then
+    cp "$src_dir/$filename" "$dest"
+  else
+    local url="https://raw.githubusercontent.com/notasandworm/bzsh/main/$filename"
+    print_step "Downloading $filename from GitHub..."
+    if ! curl -fsSL "$url" -o "$dest"; then
+      print_error "Failed to download $filename from $url."
+      return 1
+    fi
+  fi
+  return 0
+}
+
 # Show help
 show_help() {
   print_title
@@ -179,8 +198,7 @@ run_setup() {
 
   # Prompt Decorator
   if ask_yes_no "Set BcZsh as prompt decorator?" "Y"; then
-    print_step "Copying prompt.bzsh to $CONFIG_DIR..."
-    cp "$script_src_dir/prompt.bzsh" "$CONFIG_DIR/prompt.bzsh"
+    copy_or_download_file "prompt.bzsh" "$CONFIG_DIR/prompt.bzsh" "$script_src_dir"
     config_content+="# BcZsh Prompt Decorator\n[[ -f \"$CONFIG_DIR/prompt.bzsh\" ]] && source \"$CONFIG_DIR/prompt.bzsh\"\n\n"
   else
     config_content+="# Simple prompt setup\nautoload -Uz promptinit && promptinit\nprompt adam1\n\n"
@@ -188,8 +206,7 @@ run_setup() {
 
   # Autocomplete
   if ask_yes_no "Enable BcZsh Autocomplete system?" "Y"; then
-    print_step "Copying autocomplete.bzsh to $CONFIG_DIR..."
-    cp "$script_src_dir/autocomplete.bzsh" "$CONFIG_DIR/autocomplete.bzsh"
+    copy_or_download_file "autocomplete.bzsh" "$CONFIG_DIR/autocomplete.bzsh" "$script_src_dir"
     config_content+="# BcZsh Autocomplete\n[[ -f \"$CONFIG_DIR/autocomplete.bzsh\" ]] && source \"$CONFIG_DIR/autocomplete.bzsh\"\n\n"
   fi
 
@@ -238,8 +255,7 @@ run_setup() {
 
   # Neovim Updater
   if ask_yes_no "Add Neovim updater (update-nvim) helper function?" "Y"; then
-    print_step "Copying nvim-update.bzsh to $CONFIG_DIR..."
-    cp "$script_src_dir/nvim-update.bzsh" "$CONFIG_DIR/nvim-update.bzsh"
+    copy_or_download_file "nvim-update.bzsh" "$CONFIG_DIR/nvim-update.bzsh" "$script_src_dir"
     config_content+="# Neovim Updater Helper\n[[ -f \"$CONFIG_DIR/nvim-update.bzsh\" ]] && source \"$CONFIG_DIR/nvim-update.bzsh\"\n\n"
   fi
 
@@ -248,10 +264,15 @@ run_setup() {
     config_content+="# Include local bin in PATH\nexport PATH=\"\$PATH:$BIN_DIR\"\n\n"
   fi
 
-  # Symlink bzsh itself to ~/.local/bin/bzsh
-  print_step "Installing bzsh command to $BIN_DIR/bzsh..."
-  ln -sf "$script_src_dir/bzsh" "$BIN_DIR/bzsh"
-  chmod +x "$script_src_dir/bzsh"
+  # Install bzsh itself to ~/.local/bin/bzsh
+  if [[ "$SOURCE_TYPE" == "git" ]]; then
+    print_step "Installing bzsh command to $BIN_DIR/bzsh (symlink)..."
+    ln -sf "$script_src_dir/bzsh" "$BIN_DIR/bzsh"
+  else
+    print_step "Installing bzsh command to $BIN_DIR/bzsh (copy)..."
+    cp "$script_src_dir/bzsh" "$BIN_DIR/bzsh"
+  fi
+  chmod +x "$BIN_DIR/bzsh"
   print_ok "Installed bzsh command."
 
   # Write Zshrc Block
@@ -324,11 +345,22 @@ run_update() {
       exit 1
     fi
   else
-    print_warn "This was not installed via Git clone. We will attempt a git fetch from origin if remote tools are available, or download directly."
-    # Since the repository is git@github.com:notasandworm/bzsh.git, let's clone it or pull it if available
-    # In a typical curl install, we might download raw files. But since the user specified they have ssh access,
-    # we can try to clone or update. For now, since they run in a git setup, the git-type update covers them.
-    print_warn "Please run git update in your source directory or re-run setup."
+    print_step "Updating curl-based install by fetching files from GitHub..."
+    local err=0
+    [[ -f "$CONFIG_DIR/prompt.bzsh" ]] && (copy_or_download_file "prompt.bzsh" "$CONFIG_DIR/prompt.bzsh" "/dev/null" || err=1)
+    [[ -f "$CONFIG_DIR/autocomplete.bzsh" ]] && (copy_or_download_file "autocomplete.bzsh" "$CONFIG_DIR/autocomplete.bzsh" "/dev/null" || err=1)
+    [[ -f "$CONFIG_DIR/nvim-update.bzsh" ]] && (copy_or_download_file "nvim-update.bzsh" "$CONFIG_DIR/nvim-update.bzsh" "/dev/null" || err=1)
+    
+    # Update bzsh itself
+    copy_or_download_file "bzsh" "$BIN_DIR/bzsh" "/dev/null" || err=1
+    chmod +x "$BIN_DIR/bzsh"
+    
+    if [[ $err -eq 0 ]]; then
+      print_ok "Updated successfully!"
+    else
+      print_error "Failed to update one or more files."
+      exit 1
+    fi
   fi
 
   print_footer
