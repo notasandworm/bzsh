@@ -7,19 +7,19 @@
 # - interactive installer, only writing or linking selected packages
 # - download all of the scripts into target for reference ~/.config/bzsh
 #
-# 
 # [user story installation]
 # - user downloads bzsh using curl command
-# - user sees "Run `bzsh setup` to start."
+# - user sees "Run `bzsh setup` to start.", with optional flag -y to install all
 # - user's current ~/.zshrc is backed up
 # - user installs scripts interactively (most scripts are written directly into ~/.zshrc - huge scripts are imported)
 #
-# [user story wants to add features]
+# [user story wants to add/remove/restart features]
 # - reruns bzsh setup
-# [user story update]
+#
+# [user story update from origin]
 # - user runs bzsh update
 #
-# [suer story remove]
+# [user story remove]
 # - user runs bzsh uninstall
 # - interactively asks to remove ~/.config files for 0 footprint
 #
