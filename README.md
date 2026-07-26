@@ -1,8 +1,6 @@
-# 󰅶 Busy Zsh (bzsh)
+# 󰅶 Busy Shell (bzsh)
 
-Hey there! Welcome to **Busy Zsh** (or `bzsh` for short). 
-
-This is my personal playground for setting up a super-charged, comfortable Zsh terminal environment on fresh system installs. It configures a beautiful prompt, sets up handy autocomplete, tunes history, and plugs in a few of my favorite CLI tools (like `eza`, `bat`, and `zoxide`).
+BzSh configures a beautiful prompt, sets up handy autocomplete, tunes history, and plugs in CLI tools like `eza`, `bat`, and `zoxide`.
 
 I built an interactive installer in Bash to handle everything. It checks your dependencies, backs up your existing configuration, and lets you toggle features on and off so you only get what you want.
 
