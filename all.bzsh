@@ -1,0 +1,102 @@
+# ------------------------------------------------------------------------------
+# 󰅶 Busy Zsh 
+# ------------------------------------------------------------------------------
+#
+# [features]
+# - bzsh cli
+# - interactive installer, only writing or linking selected packages
+# - download all of the scripts into target for reference ~/.config/bzsh
+#
+# 
+# [user story installation]
+# - user downloads bzsh using curl command
+# - user sees "Run `bzsh setup` to start."
+# - user's current ~/.zshrc is backed up
+# - user installs scripts interactively (most scripts are written directly into ~/.zshrc - huge scripts are imported)
+#
+# [user story wants to add features]
+# - reruns bzsh setup
+# [user story update]
+# - user runs bzsh update
+#
+# [suer story remove]
+# - user runs bzsh uninstall
+# - interactively asks to remove ~/.config files for 0 footprint
+#
+# ==============================================================================
+# 1. ENVIRONMENT & PROMPT INITIALIZATION
+# ==============================================================================
+
+# set BcZsh as prompt decorator? [Y/n]
+# if yes, import ~/.config/bzsh/prompt.bzsh into ~/.zschrc
+# 	[[ -f ~/.config/bzsh/prompt.bzsh ]] && source ~/.config/bzsh/prompt.bzsh
+# else BcZsh Prompt no, Initialize simple prompt system
+# autoload -Uz promptinit && promptinit
+# prompt adam1
+
+
+# Autocomplete
+# enable BcZsh Autocomplete [Y/n]? (./autocomplete.zsh)
+# if yes, add to $HOME/.zshrc directly
+
+# ==============================================================================
+# HISTORY SETTINGS
+# ==============================================================================
+# allow BcZsh to set zsh history? [Y/n]
+# put directly into ~/.zshrc
+HISTFILE="$HOME/.zsh_history"
+HISTSIZE=50000
+SAVEHIST=50000
+
+setopt APPEND_HISTORY          # Append history to file rather than overwrite
+setopt SHARE_HISTORY           # Share history across shell instances immediately
+setopt EXTENDED_HISTORY        # Save timestamp and execution duration
+setopt HIST_IGNORE_ALL_DUPS    # Purge older duplicate entries when adding new ones
+setopt HIST_IGNORE_SPACE       # Do not record commands preceded by a space
+
+# ==============================================================================
+# KEYBINDINGS & HISTORY SEARCH
+# ==============================================================================
+# included in the zsh history prompt.
+autoload -Uz up-line-or-beginning-search down-line-or-beginning-search
+zle -N up-line-or-beginning-search
+zle -N down-line-or-beginning-search
+
+# Prefix history search using arrow keys
+bindkey '^[[A' up-line-or-beginning-search
+bindkey '^[[B' down-line-or-beginning-search
+
+# ==============================================================================
+# SHELL OPTIONS
+# ==============================================================================
+# prompt for both with default to Y
+setopt AUTO_CD                 # Change directory without typing 'cd'
+setopt NO_BEEP                 # Suppress terminal audio alerts
+
+# ==============================================================================
+# *. MATT's SETTINGS
+# ==============================================================================
+# install and alias eza default to Y?
+alias ls="eza --icons=always --colour=always"
+alias la="eza -alog --git --icons=always --colour=always"
+alias ll="eza -log --git --icons=always --colour=always"
+
+# install and alias batcat default to Y?
+alias bat="batcat"
+
+# install zoxide default to Y?
+eval "$(zoxide init --cmd z zsh)"
+
+# install fd-find and fix debian quirk default to Y?
+
+# Add nvim-update function (allows downloading/updating of nvim into system) [Y/n]?
+# if yes, download to $HOME/.config/bzsh/nvim-update.bzsh
+# then, import to $HOME/.zshrc:
+# `[[ -f ~/.config/bzsh/nvim-update.bzsh ]] && source ~/.config/bzsh/nvim-update.bzsh
+
+
+
+# fix debian quirk
+# add ~/.local/bin to path? default to Y.
+export PATH="$PATH:$HOME/.local/bin"
+
