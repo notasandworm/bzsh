@@ -49,8 +49,26 @@ add-zsh-hook preexec _prompt_preexec
 add-zsh-hook precmd _prompt_precmd
 
 # ------------------------------------------------------------------------------
-# 2. Context Detectors (Git & SDK)
+# 2. Context Detectors (OS, Git & SDK)
 # ------------------------------------------------------------------------------
+_os_info() {
+  if [[ -f /etc/os-release ]]; then
+    local os_id
+    os_id=$(grep -i '^ID=' /etc/os-release | cut -d= -f2 | tr -d '"')
+    local os_like
+    os_like=$(grep -i '^ID_LIKE=' /etc/os-release | cut -d= -f2 | tr -d '"')
+
+    if [[ "$os_id" == *"arch"* || "$os_like" == *"arch"* ]]; then
+      echo "%F{cyan}[ARCH]%f "
+      return
+    elif [[ "$os_id" == *"debian"* || "$os_id" == *"ubuntu"* || "$os_id" == *"pop"* || "$os_id" == *"mint"* || "$os_like" == *"debian"* || "$os_like" == *"ubuntu"* ]]; then
+      echo "%F{red}[DEB]%f "
+      return
+    fi
+  fi
+  echo "%F{green}[LINUX]%f "
+}
+
 _git_status() {
   local branch
   branch=$(git branch --show-current 2>/dev/null)
@@ -104,5 +122,5 @@ _sdk_info() {
 # ------------------------------------------------------------------------------
 # 3. Prompt Assembly
 # ------------------------------------------------------------------------------
-PROMPT='%F{blue}%~%f $(_git_status)$(_sdk_info)${_CMD_ELAPSED}
+PROMPT='$(_os_info)%F{blue}%~%f $(_git_status)$(_sdk_info)${_CMD_ELAPSED}
 %F{green}%n@%m%f:%# '
