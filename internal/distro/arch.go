@@ -10,7 +10,7 @@ import (
 
 // ArchAdapter handles Arch Linux & derivatives (Manjaro, EndeavourOS, etc.).
 // Matt's note: Arch keeps things simple and upstream! No 'batcat' or 'fdfind' weirdness here.
-// Official core/extra packages are named 'bat' and 'fd' directly. Beautiful!
+// Official core/extra packages are named 'bat', 'fd', and 'neovim' directly. Beautiful!
 type ArchAdapter struct{}
 
 func NewArchAdapter() *ArchAdapter {
@@ -21,7 +21,7 @@ func (a *ArchAdapter) Name() string {
 	return "Arch Linux"
 }
 
-// CheckMissingPackages inspects which optional tools are missing on Arch Linux.
+// CheckMissingPackages inspects which optional tools are missing on Arch Linux (checking core & extra repos).
 func (a *ArchAdapter) CheckMissingPackages(features []string) ([]FeaturePackage, error) {
 	var missing []FeaturePackage
 
@@ -47,13 +47,17 @@ func (a *ArchAdapter) CheckMissingPackages(features []string) ([]FeaturePackage,
 			if !CommandExists("zoxide") {
 				missing = append(missing, FeaturePackage{LogicalName: "zoxide", PackageName: "zoxide", BinaryName: "zoxide"})
 			}
+		case "neovim":
+			if !CommandExists("nvim") {
+				missing = append(missing, FeaturePackage{LogicalName: "neovim", PackageName: "neovim", BinaryName: "nvim"})
+			}
 		}
 	}
 
 	return missing, nil
 }
 
-// InstallPackages invokes pacman to install missing packages from official repos.
+// InstallPackages invokes pacman to install missing packages strictly from official core/extra repos.
 func (a *ArchAdapter) InstallPackages(pkgs []string) error {
 	if len(pkgs) == 0 {
 		return nil
@@ -92,4 +96,10 @@ func (a *ArchAdapter) GetFdTargetBinary() string {
 		return path
 	}
 	return "/usr/bin/fd"
+}
+
+// NeedsNvimUpdater returns false on Arch!
+// Arch provides a fresh, rolling-release Neovim package directly in the 'extra' repository.
+func (a *ArchAdapter) NeedsNvimUpdater() bool {
+	return false
 }

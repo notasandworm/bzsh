@@ -8,9 +8,9 @@ import (
 
 // FeaturePackage specifies distro-specific package names and binaries.
 type FeaturePackage struct {
-	LogicalName  string // e.g. "bat", "fd-find", "eza", "zoxide", "zsh"
-	PackageName  string // distro package name for installation
-	BinaryName   string // executable command name to check in PATH
+	LogicalName string // e.g. "bat", "fd-find", "eza", "zoxide", "zsh", "neovim"
+	PackageName string // distro package name for installation
+	BinaryName  string // executable command name to check in PATH
 }
 
 // Adapter interface abstracts away all distro-specific package managers and quirks!
@@ -21,6 +21,7 @@ type Adapter interface {
 	GetBatAlias() string
 	NeedsFdSymlink() bool
 	GetFdTargetBinary() string
+	NeedsNvimUpdater() bool // Debian needs update-nvim AppImage function, Arch uses native 'neovim' from extra repo!
 }
 
 // CommandExists checks if a binary exists in the user's PATH.

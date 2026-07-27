@@ -97,6 +97,11 @@ func (d *DebianAdapter) GetFdTargetBinary() string {
 	return "/usr/bin/fdfind"
 }
 
+// NeedsNvimUpdater returns true for Debian (since Debian repos often ship older Neovim versions).
+func (d *DebianAdapter) NeedsNvimUpdater() bool {
+	return true
+}
+
 func joinArgs(args []string) string {
 	result := ""
 	for i, a := range args {

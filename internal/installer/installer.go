@@ -55,6 +55,11 @@ func RunSetup(interactive bool) error {
 
 	// 2. Check optional tools
 	features := []string{"eza", "bat", "zoxide", "fd-find"}
+	if !adapter.NeedsNvimUpdater() {
+		// On Arch, neovim is available directly in the official 'extra' repo!
+		features = append(features, "neovim")
+	}
+
 	missingPkgs, err := adapter.CheckMissingPackages(features)
 	if err != nil {
 		return err
@@ -89,16 +94,21 @@ func RunSetup(interactive bool) error {
 	}
 
 	// 5. Gather feature choices
+	var nvimUpdaterChoice bool
+	if adapter.NeedsNvimUpdater() {
+		nvimUpdaterChoice = ui.AskYesNo("Add Neovim updater (update-nvim) helper function?", true, autoYes)
+	}
+
 	opts := zsh.ConfigOptions{
-		PromptDecorator:   ui.AskYesNo("Set BcZsh as prompt decorator?", true, autoYes),
-		Autocomplete:      ui.AskYesNo("Enable BcZsh Autocomplete system?", true, autoYes),
-		HistorySettings:   ui.AskYesNo("Allow BcZsh to configure Zsh History settings?", true, autoYes),
+		PromptDecorator:   ui.AskYesNo("Set Busy Shell as prompt decorator?", true, autoYes),
+		Autocomplete:      ui.AskYesNo("Enable Busy Shell Autocomplete system?", true, autoYes),
+		HistorySettings:   ui.AskYesNo("Allow Busy Shell to configure Zsh History settings?", true, autoYes),
 		KeybindingsSearch: ui.AskYesNo("Enable arrow-key history prefix searching?", true, autoYes),
 		ShellOptions:      ui.AskYesNo("Enable auto-cd and suppress beep alerts?", true, autoYes),
 		EzaAliases:        ui.AskYesNo("Set up ls aliases using eza?", true, autoYes),
 		BatAlias:          adapter.GetBatAlias(),
 		Zoxide:            ui.AskYesNo("Enable zoxide directory jumper?", true, autoYes),
-		NvimUpdater:       ui.AskYesNo("Add Neovim updater (update-nvim) helper function?", true, autoYes),
+		NvimUpdater:       nvimUpdaterChoice,
 		AddToPath:         ui.AskYesNo(fmt.Sprintf("Add %s to your shell PATH?", paths.BinDir), true, autoYes),
 	}
 
