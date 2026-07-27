@@ -37,7 +37,7 @@ func (d *DebianAdapter) CheckMissingPackages(features []string) ([]FeaturePackag
 			}
 		case "bat":
 			if !CommandExists("bat") && !CommandExists("batcat") {
-				missing = append(missing, FeaturePackage{LogicalName: "bat", PackageName: "batcat", BinaryName: "batcat"})
+				missing = append(missing, FeaturePackage{LogicalName: "bat", PackageName: "bat", BinaryName: "batcat"})
 			}
 		case "fd-find":
 			if !CommandExists("fd") && !CommandExists("fdfind") {
