@@ -11,10 +11,14 @@ Now powered by a fast, single Go binary with embedded scripts and native distro 
 If you're on a fresh system and want to get set up immediately:
 
 ```bash
+# 1. Download the bzsh binary
 curl -fsSL https://raw.githubusercontent.com/notasandworm/bzsh/main/install.sh | sh
+
+# 2. Run setup to configure your shell
+bzsh setup
 ```
 
-*(Note: `bzsh setup` runs non-interactively with auto-yes by default. If Zsh or missing tools aren't installed yet, `bzsh` automatically handles package installation!)*
+*(Note: `bzsh setup` runs non-interactively with auto-yes by default. Run `bzsh setup -i` if you prefer to toggle features interactively!)*
 
 ---
 

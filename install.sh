@@ -1,16 +1,19 @@
 #!/bin/sh
 # ------------------------------------------------------------------------------
-# 󰅶 Busy Zsh (bzsh) - Quick Installer
+# 󰅶 Busy Shell (bzsh) - Binary Downloader
 # ------------------------------------------------------------------------------
-# Hey! This script fetches the compiled bzsh binary and runs setup.
-# Minimal, fast, and easy to read.
+# Hey! This script downloads the pre-compiled bzsh binary directly into
+# ~/.local/bin/bzsh so you don't have to compile anything manually.
+#
+# Once downloaded, just run:
+#   bzsh setup
 
 set -e
 
 BIN_DIR="$HOME/.local/bin"
 mkdir -p "$BIN_DIR"
 
-echo "➜ Fetching bzsh binary..."
+echo "➜ Downloading Busy Shell (bzsh) binary..."
 
 # Determine architecture
 ARCH=$(uname -m)
@@ -20,7 +23,6 @@ case "$ARCH" in
   *)       ARCH_NAME="amd64" ;;
 esac
 
-# Download binary release from GitHub (or local copy if running inside git clone)
 BINARY_URL="https://github.com/notasandworm/bzsh/releases/latest/download/bzsh-linux-${ARCH_NAME}"
 
 if command -v curl >/dev/null 2>&1; then
@@ -31,7 +33,7 @@ fi
 
 chmod +x "$BIN_DIR/bzsh"
 
-echo "✔ Installed bzsh binary to $BIN_DIR/bzsh"
-echo "➜ Launching bzsh setup..."
-
-"$BIN_DIR/bzsh" setup
+echo ""
+echo "✔ Successfully downloaded bzsh binary to $BIN_DIR/bzsh!"
+echo "➜ Run 'bzsh setup' to start the installation."
+echo ""

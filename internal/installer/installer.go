@@ -137,6 +137,7 @@ func RunSetup(interactive bool) error {
 	}
 
 	ui.PrintOK("Setup completed successfully!")
+	ui.PrintShellChangePrompt()
 	ui.PrintFooter()
 	return nil
 }

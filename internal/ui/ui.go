@@ -18,11 +18,11 @@ const (
 	ColorMagenta = "\033[1;35m"
 )
 
-// PrintTitle outputs our signature bzsh header!
+// PrintTitle outputs our signature Busy Shell (bzsh) header!
 func PrintTitle() {
 	fmt.Println()
-	fmt.Printf("%s󰅶 Busy Zsh (bzsh) CLI%s\n", ColorBlue, ColorReset)
-	fmt.Printf("%s=======================%s\n\n", ColorBlue, ColorReset)
+	fmt.Printf("%s󰅶 Busy Shell (bzsh) CLI%s\n", ColorBlue, ColorReset)
+	fmt.Printf("%s=========================%s\n\n", ColorBlue, ColorReset)
 }
 
 // PrintStep displays a step in progress.
@@ -45,10 +45,19 @@ func PrintError(msg string) {
 	fmt.Printf("%s✘%s %s\n", ColorRed, ColorReset, msg)
 }
 
+// PrintShellChangePrompt shows the user how to switch their default shell to Zsh using chsh / cat /etc/shells!
+func PrintShellChangePrompt() {
+	fmt.Println()
+	fmt.Printf("%s➜ To make Zsh your default shell, check valid shells with:%s\n", ColorYellow, ColorReset)
+	fmt.Printf("    cat /etc/shells   (or chsh -l)\n")
+	fmt.Printf("%s  Then set Zsh as your default shell:%s\n", ColorYellow, ColorReset)
+	fmt.Printf("    chsh -s $(which zsh)\n")
+}
+
 // PrintFooter shows our warm closing thank-you note.
 func PrintFooter() {
 	fmt.Println()
-	fmt.Printf("%s♥ Thank you for using Busy Zsh!%s\n", ColorGreen, ColorReset)
+	fmt.Printf("%s♥ Thank you for using Busy Shell!%s\n", ColorGreen, ColorReset)
 	fmt.Printf("%s✉ For queries, feedback, or issues, email notasandworm@gmail.com%s\n\n", ColorCyan, ColorReset)
 }
 
