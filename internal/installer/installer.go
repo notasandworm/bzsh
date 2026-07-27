@@ -16,6 +16,13 @@ func RunSetup(interactive bool) error {
 	autoYes := !interactive
 
 	ui.PrintTitle()
+
+	// Initial confirmation prompt before tweaking anything!
+	if !ui.AskYesNo("This will install custom prompt decorators, shell configurations, and quality-of-life CLI packages. Continue?", true, autoYes) {
+		ui.PrintWarn("Setup aborted by user.")
+		return nil
+	}
+
 	ui.PrintStep("Starting setup...")
 
 	adapter := distro.DetectDistro()
