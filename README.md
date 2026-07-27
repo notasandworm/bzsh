@@ -1,59 +1,69 @@
 # 󰅶 Busy Shell (bzsh)
 
-BzSh configures a beautiful prompt, sets up handy autocomplete, tunes history, and plugs in CLI tools like `eza`, `bat`, and `zoxide`.
+BzSh configures a beautiful prompt, sets up handy autocomplete, tunes history, and plugs in modern CLI tools like `eza`, `bat`, and `zoxide`.
 
-I built an interactive installer in Bash to handle everything. It checks your dependencies, backs up your existing configuration, and lets you toggle features on and off so you only get what you want.
+Now powered by a fast, single Go binary with embedded scripts and native distro detection (Debian/Ubuntu & Arch Linux)!
 
 ---
 
 ## 🚀 Quick Install (One-Liner)
 
-If you're on a fresh system and want to get set up immediately, just copy and paste this command into your terminal:
+If you're on a fresh system and want to get set up immediately:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/notasandworm/bzsh/main/bzsh -o /tmp/bzsh && chmod +x /tmp/bzsh && /tmp/bzsh setup && rm /tmp/bzsh
+# 1. Download the bzsh binary
+curl -fsSL https://raw.githubusercontent.com/notasandworm/bzsh/main/install.sh | sh
+
+# 2. Run setup to configure your shell
+bzsh setup
 ```
 
-*(Note: If Zsh isn't installed yet, the script will notice and ask if you want to install it first!)*
+*(Note: `bzsh setup` runs non-interactively with auto-yes by default. Run `bzsh setup -i` if you prefer to toggle features interactively!)*
 
 ---
 
-## 🛠️ Manual Installation (Git Clone)
+## 🛠️ Manual Installation (Git Clone or Local Build)
 
-If you'd rather clone the repo and run it locally, you can do this:
+If you prefer building locally with Go:
 
 ```bash
 # Clone the repository
 git clone git@github.com:notasandworm/bzsh.git
 cd bzsh
 
-# Run the installer
+# Build the binary
+go build -o bzsh main.go
+
+# Run setup (non-interactive auto-yes by default)
 ./bzsh setup
+
+# Or run interactively if you want to toggle individual features:
+./bzsh setup -i
 ```
 
-Once installed, the `bzsh` command will be added to your path at `~/.local/bin/bzsh`, so you can run it from anywhere.
+Once installed, the `bzsh` binary is available in your PATH at `~/.local/bin/bzsh`.
 
 ---
 
-## ✨ Features You Can Toggle
+## ✨ Features
 
-- **Custom Prompt Decorator**: A clean prompt showing your current directory, Git status, active runtime/SDK version (Go, Python, Rust, Node), and command execution duration.
+- **Custom Prompt Decorator**: A clean prompt showing your current directory, Git status, active runtime/SDK version (Go, Python, Rust, Node, Docker), and command execution duration.
 - **Smart Autocomplete**: Colorized completions, partial-word matching, and process helper completions for commands like `kill`.
-- **Sensible History Settings**: Sets up command history sharing across terminal tabs, timestamps, and deduplication.
-- **Keybindings**: Enables prefix history search with up/down arrow keys (type `git` and press Up to search only commands starting with `git`).
-- **Better Shell Defaults**: Suppresses annoyances like system beeps and enables automatic `cd` (just type a directory name without `cd`).
-- **Modern CLI Tools**:
+- **Sensible History Settings**: Command history sharing across terminal tabs, timestamps, and deduplication.
+- **Keybindings**: Prefix history search with arrow keys (type `git` and press Up to search `git` commands).
+- **Better Shell Defaults**: Suppresses annoyances like system beeps and enables automatic `cd`.
+- **Modern CLI Tools (Distro-Aware)**:
   - `eza` aliases (`ls`, `la`, `ll` with icons and Git statuses).
-  - `bat` syntax highlighting.
+  - `bat` syntax highlighting (`batcat` on Debian, `bat` on Arch).
   - `zoxide` integration for jumping around folders fast.
-  - Fixes Debian's `fd-find` naming quirk automatically.
+  - Automatically handles Debian's `fd-find` naming quirk while maintaining native `fd` on Arch.
 - **Neovim Updater**: Installs an `update-nvim` helper function to pull and link the latest Neovim AppImage directly.
 
 ---
 
 ## 🔄 Keeping Things Updated
 
-To update your scripts and aliases to the latest version, just run:
+To update your scripts and binary to the latest version:
 
 ```bash
 bzsh update
@@ -63,13 +73,13 @@ bzsh update
 
 ## 🧹 Zero-Footprint Uninstall
 
-If you decide `bzsh` isn't for you, removing it is completely pain-free. Run:
+If you decide `bzsh` isn't for you:
 
 ```bash
 bzsh uninstall
 ```
 
-This will cleanly strip the `bzsh` configuration block from your `.zshrc` and ask if you want to wipe the config folder and commands for a 100% clean footprint.
+This will cleanly strip the `bzsh` configuration block from your `.zshrc` and prompt to wipe the config folder and binary for a 100% clean footprint.
 
 ---
 
