@@ -1,0 +1,55 @@
+# ------------------------------------------------------------------------------
+# 󰅶 Busy Zsh Neovim Update 
+# ------------------------------------------------------------------------------
+# ==============================================================================
+# *. MATT's SHELL FUNCTIONS
+# ==============================================================================
+update-nvim() {
+    # Exit early if any command in the pipeline fails
+    set -e
+
+    local TARGET_DIR="$HOME/.local/share/nvim-root"
+    local BIN_DIR="$HOME/.local/bin"
+    local TMP_WORKSPACE
+    
+    # Create a secure, isolated temporary workspace
+    TMP_WORKSPACE=$(mktemp -d /tmp/nvim-update-XXXXXX)
+    
+    # Ensure temporary workspace files are destroyed on errors or exit
+    trap 'rm -rf "$TMP_WORKSPACE"' EXIT
+
+    echo "Fetching the latest Neovim AppImage..."
+    cd "$TMP_WORKSPACE"
+    
+    # -L follows redirects; -sS hides progress bar but shows errors
+    if ! curl -LOsS https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.appimage; then
+        echo "Error: Failed to download Neovim AppImage." >&2
+        return 1
+    fi
+    chmod +x nvim-linux-x86_64.appimage
+
+    echo "Extracting AppImage contents..."
+    # Extract to a deterministic folder inside our temp workspace
+    ./nvim-linux-x86_64.appimage --appimage-extract > /dev/null
+
+    if [ ! -d "squashfs-root" ]; then
+        echo "Error: Extraction failed." >&2
+        return 1
+    fi
+
+    echo "Relocating binaries safely..."
+    mkdir -p "$BIN_DIR"
+    
+    # Remove old extraction target completely to avoid nested directories
+    rm -rf "$TARGET_DIR"
+    mkdir -p "$(dirname "$TARGET_DIR")"
+    
+    # Move the fresh extraction out of the temporary workspace
+    mv squashfs-root "$TARGET_DIR"
+
+    # Atomic symlink replacement (forces overwrite safely)
+    ln -sf "$TARGET_DIR/AppRun" "$BIN_DIR/nvim"
+
+    echo "Neovim updated successfully! Current version:"
+    "$BIN_DIR/nvim" --version | head -n 1
+}
