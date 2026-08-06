@@ -80,7 +80,7 @@ _git_status() {
     dirty="*"
   fi
 
-  echo "%F{magenta}(${branch}${dirty})%f "
+  echo "%F{magenta}+${branch}${dirty}%f "
 }
 
 _sdk_info() {
@@ -131,6 +131,6 @@ _venv_info() {
 # 3. Prompt Assembly
 # ------------------------------------------------------------------------------
 PROMPT='$(_os_info)%F{blue}%~%f $(_git_status)$(_sdk_info)${_CMD_ELAPSED}
-$(_venv_info)%F{green}%n@%m%f:%# '
+$(_venv_info)%F{green}%n@%m%f%# '
 
 
