@@ -119,8 +119,18 @@ _sdk_info() {
   fi
 }
 
+_venv_info() {
+  if [[ -n "$VIRTUAL_ENV" ]]; then
+    echo "%F{yellow}(${VIRTUAL_ENV:t})%f "
+  elif [[ -n "$CONDA_DEFAULT_ENV" ]]; then
+    echo "%F{yellow}(${CONDA_DEFAULT_ENV})%f "
+  fi
+}
+
 # ------------------------------------------------------------------------------
 # 3. Prompt Assembly
 # ------------------------------------------------------------------------------
 PROMPT='$(_os_info)%F{blue}%~%f $(_git_status)$(_sdk_info)${_CMD_ELAPSED}
-%F{green}%n@%m%f:%# '
+$(_venv_info)%F{green}%n@%m%f:%# '
+
+
