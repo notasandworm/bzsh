@@ -11,9 +11,12 @@ import (
 )
 
 const (
-	StartMarker = "# >>> bzsh initialize >>>"
-	EndMarker   = "# <<< bzsh initialize <<<"
+	StartMarker       = "# >>> bzsh initialize >>>"
+	EndMarker         = "# <<< bzsh initialize <<<"
+	LegacyStartMarker = "# >>> bzhrc initialize >>>"
+	LegacyEndMarker   = "# <<< bzhrc initialize <<<"
 )
+
 
 // ConfigOptions holds feature toggle choices selected during setup.
 type ConfigOptions struct {
@@ -200,33 +203,91 @@ func GenerateConfigBlock(opts ConfigOptions, paths *ConfigPaths) (string, error)
 	return sb.String(), nil
 }
 
-// UpdateZshrc replaces or appends the bzsh config block in .zshrc.
+// ExtractUserContent parses a .zshrc string for bzsh or bzhrc markers
+// and returns user content prior to the start marker and user content following the end marker.
+func ExtractUserContent(content string) (before string, after string) {
+	startPairs := []struct{ start, end string }{
+		{StartMarker, EndMarker},
+		{LegacyStartMarker, LegacyEndMarker},
+	}
+
+	for _, pair := range startPairs {
+		if strings.Contains(content, pair.start) && strings.Contains(content, pair.end) {
+			startIndex := strings.Index(content, pair.start)
+			endIndex := strings.Index(content, pair.end) + len(pair.end)
+
+			before = content[:startIndex]
+			after = content[endIndex:]
+			return before, after
+		}
+	}
+
+	return content, ""
+}
+
+// FindLatestBackup finds the path to the most recent .zshrc.bzsh-backup.* file if present.
+func FindLatestBackup(paths *ConfigPaths) (string, error) {
+	dir := filepath.Dir(paths.ZshrcFile)
+	pattern := filepath.Join(dir, ".zshrc.bzsh-backup.*")
+	matches, err := filepath.Glob(pattern)
+	if err != nil || len(matches) == 0 {
+		return "", err
+	}
+
+	var latestFile string
+	var latestTime time.Time
+
+	for _, match := range matches {
+		info, err := os.Stat(match)
+		if err == nil {
+			if latestFile == "" || info.ModTime().After(latestTime) {
+				latestTime = info.ModTime()
+				latestFile = match
+			}
+		}
+	}
+
+	return latestFile, nil
+}
+
+// UpdateZshrc replaces or appends the bzsh config block in .zshrc,
+// preserving any lines existing before and after the bzsh/bzhrc indicators.
 func UpdateZshrc(paths *ConfigPaths, newBlock string) error {
 	ui.PrintStep(fmt.Sprintf("Updating %s...", paths.ZshrcFile))
 
 	var existingContent string
-	if data, err := os.ReadFile(paths.ZshrcFile); err == nil {
+	if data, err := os.ReadFile(paths.ZshrcFile); err == nil && len(data) > 0 {
 		existingContent = string(data)
-	}
-
-	var updated string
-	if strings.Contains(existingContent, StartMarker) && strings.Contains(existingContent, EndMarker) {
-		// Replace existing block cleanly
-		startIndex := strings.Index(existingContent, StartMarker)
-		endIndex := strings.Index(existingContent, EndMarker) + len(EndMarker)
-
-		before := existingContent[:startIndex]
-		after := existingContent[endIndex:]
-		updated = before + newBlock + after
 	} else {
-		// Append block to the end of .zshrc
-		if existingContent != "" && !strings.HasSuffix(existingContent, "\n") {
-			existingContent += "\n"
+		if backupPath, err := FindLatestBackup(paths); err == nil && backupPath != "" {
+			if data, err := os.ReadFile(backupPath); err == nil {
+				ui.PrintStep(fmt.Sprintf("Restoring pre/post indicator content from latest backup %s...", backupPath))
+				existingContent = string(data)
+			}
 		}
-		updated = existingContent + "\n" + newBlock + "\n"
 	}
 
-	if err := os.WriteFile(paths.ZshrcFile, []byte(updated), 0644); err != nil {
+	userBefore, userAfter := ExtractUserContent(existingContent)
+
+	var sb strings.Builder
+	if strings.TrimSpace(userBefore) != "" {
+		sb.WriteString(strings.TrimRight(userBefore, "\n"))
+		sb.WriteString("\n\n")
+	}
+
+	sb.WriteString(newBlock)
+
+	if strings.TrimSpace(userAfter) != "" {
+		sb.WriteString("\n\n")
+		sb.WriteString(strings.TrimLeft(userAfter, "\n"))
+		if !strings.HasSuffix(userAfter, "\n") {
+			sb.WriteString("\n")
+		}
+	} else {
+		sb.WriteString("\n")
+	}
+
+	if err := os.WriteFile(paths.ZshrcFile, []byte(sb.String()), 0644); err != nil {
 		return fmt.Errorf("failed writing to %s: %w", paths.ZshrcFile, err)
 	}
 
@@ -245,27 +306,27 @@ func RemoveZshrcBlock(paths *ConfigPaths) error {
 	}
 
 	content := string(data)
-	if !strings.Contains(content, StartMarker) {
+	before, after := ExtractUserContent(content)
+	if before == content && after == "" {
 		ui.PrintWarn(fmt.Sprintf("No bzsh block found in %s.", paths.ZshrcFile))
 		return nil
 	}
 
 	ui.PrintStep(fmt.Sprintf("Removing bzsh block from %s...", paths.ZshrcFile))
 
-	startIndex := strings.Index(content, StartMarker)
-	endIndex := strings.Index(content, EndMarker)
-	if endIndex != -1 {
-		endIndex += len(EndMarker)
-		// Clean trailing newline if any
-		if endIndex < len(content) && content[endIndex] == '\n' {
-			endIndex++
-		}
-		updated := content[:startIndex] + content[endIndex:]
-		if err := os.WriteFile(paths.ZshrcFile, []byte(updated), 0644); err != nil {
-			return fmt.Errorf("failed to save stripped %s: %w", paths.ZshrcFile, err)
-		}
-		ui.PrintOK("Removed bzsh block.")
+	var sb strings.Builder
+	if strings.TrimSpace(before) != "" {
+		sb.WriteString(strings.TrimRight(before, "\n"))
+		sb.WriteString("\n")
+	}
+	if strings.TrimSpace(after) != "" {
+		sb.WriteString(strings.TrimLeft(after, "\n"))
 	}
 
+	if err := os.WriteFile(paths.ZshrcFile, []byte(sb.String()), 0644); err != nil {
+		return fmt.Errorf("failed to save stripped %s: %w", paths.ZshrcFile, err)
+	}
+	ui.PrintOK("Removed bzsh block.")
 	return nil
 }
+
