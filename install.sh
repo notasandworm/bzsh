@@ -24,25 +24,40 @@ case "$ARCH" in
 esac
 
 BINARY_URL="https://github.com/notasandworm/bzsh/releases/latest/download/bzsh-linux-${ARCH_NAME}"
+RAW_URL="https://raw.githubusercontent.com/notasandworm/bzsh/main/bzsh"
 
 DOWNLOAD_SUCCESS=0
 
-if command -v curl >/dev/null 2>&1; then
-  if curl -fsSL "$BINARY_URL" -o "$BIN_DIR/bzsh"; then
-    DOWNLOAD_SUCCESS=1
+download_file() {
+  url="$1"
+  dest="$2"
+  if command -v curl >/dev/null 2>&1; then
+    curl -fsSL "$url" -o "$dest" 2>/dev/null && return 0
+  elif command -v wget >/dev/null 2>&1; then
+    wget -qO "$dest" "$url" 2>/dev/null && return 0
   fi
-elif command -v wget >/dev/null 2>&1; then
-  if wget -qO "$BIN_DIR/bzsh" "$BINARY_URL"; then
+  return 1
+}
+
+# 1. Attempt download from GitHub Release assets
+if download_file "$BINARY_URL" "$BIN_DIR/bzsh"; then
+  DOWNLOAD_SUCCESS=1
+fi
+
+# 2. Fallback: Attempt download from raw GitHub repository (main branch)
+if [ "$DOWNLOAD_SUCCESS" -ne 1 ]; then
+  if download_file "$RAW_URL" "$BIN_DIR/bzsh"; then
     DOWNLOAD_SUCCESS=1
   fi
 fi
 
+# 3. Fallback: Copy local workspace binary if available
 if [ "$DOWNLOAD_SUCCESS" -ne 1 ] && [ -f ./bzsh ]; then
   echo "➜ Using local bzsh binary..."
   cp ./bzsh "$BIN_DIR/bzsh" && DOWNLOAD_SUCCESS=1
 fi
 
-if [ ! -f "$BIN_DIR/bzsh" ]; then
+if [ "$DOWNLOAD_SUCCESS" -ne 1 ] || [ ! -f "$BIN_DIR/bzsh" ]; then
   echo "❌ Error: Failed to download or locate bzsh binary." >&2
   exit 1
 fi
