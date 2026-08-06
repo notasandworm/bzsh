@@ -16,11 +16,7 @@ If you're on a fresh system and want to get set up immediately:
 # 1. Download the bzsh binary
 curl -fsSL https://raw.githubusercontent.com/notasandworm/bzsh/main/install.sh | sh
 ```
-```
 
-```
-```
-```
 ```bash
 # 2. Run setup to configure your shell
 bzsh setup
