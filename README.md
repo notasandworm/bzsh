@@ -6,6 +6,8 @@ Now powered by a fast, single Go binary with embedded scripts and native distro 
 
 ---
 
+*(Note for Matt: `go build` after making changes!!!)*
+
 ## 🚀 Quick Install (One-Liner)
 
 If you're on a fresh system and want to get set up immediately:
@@ -13,7 +15,13 @@ If you're on a fresh system and want to get set up immediately:
 ```bash
 # 1. Download the bzsh binary
 curl -fsSL https://raw.githubusercontent.com/notasandworm/bzsh/main/install.sh | sh
+```
+```
 
+```
+```
+```
+```bash
 # 2. Run setup to configure your shell
 bzsh setup
 ```

@@ -129,3 +129,30 @@ export BACKUP_POST="ok"
 		t.Errorf("unexpected restored zshrc content.\nExpected:\n%s\nGot:\n%s", expected, updatedStr)
 	}
 }
+
+func TestEmbeddedScriptsMatchRoot(t *testing.T) {
+	scripts := []string{"prompt.bzsh", "autocomplete.bzsh", "nvim-update.bzsh"}
+
+	for _, script := range scripts {
+		embeddedData, err := GetEmbeddedScript(script)
+		if err != nil {
+			t.Fatalf("failed to get embedded script %s: %v", script, err)
+		}
+
+		rootPath := filepath.Join("..", "..", script)
+		rootData, err := os.ReadFile(rootPath)
+		if err != nil {
+			// Skip if test is running outside source repo context
+			if os.IsNotExist(err) {
+				t.Logf("Root file %s not found; skipping sync check", rootPath)
+				continue
+			}
+			t.Fatalf("failed reading root file %s: %v", rootPath, err)
+		}
+
+		if string(embeddedData) != string(rootData) {
+			t.Errorf("Script desynchronization error: embedded/%s does not match root %s!\nIf you edited %s in the root folder, remember to sync internal/zsh/embedded/%s and run `go build`!", script, script, script, script)
+		}
+	}
+}
+
