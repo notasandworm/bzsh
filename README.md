@@ -8,6 +8,19 @@ Now powered by a fast, single Go binary with embedded scripts and native distro 
 
 *(Note for Matt: `go build` after making changes!!!)*
 
+## 💡 Why bzsh?
+
+I build started this project after encountering a few issues:
+1. There was a prompt offset bug with starship where whenever i SSH'd into another machine, the prompt would be offset by a few characters.
+2. I found prompt artifacts were common and could only be cleared when clearing my terminal via `^L`
+
+`bzsh` was built as a lightweight personal alternative:
+- **Flawless SSH & Remote Compatibility**: Built with native Zsh prompt expansions and hooks, eliminating prompt offset rendering bugs over SSH i encountered.
+- **Fast & Self-Contained**: Powered by a fast Go binary with embedded Zsh scripts, providing automatic package detection for Debian/Ubuntu and Arch Linux.
+- **All-in-One Shell Enhancement**: Installs a clean multi-line prompt decorator, smart autocomplete, synchronized history, arrow-key history search, and modern CLI tool integrations.
+
+---
+
 ## 🚀 Quick Install (One-Liner)
 
 If you're on a fresh system and want to get set up immediately:
@@ -62,6 +75,39 @@ Once installed, the `bzsh` binary is available in your PATH at `~/.local/bin/bzs
   - `zoxide` integration for jumping around folders fast.
   - Automatically handles Debian's `fd-find` naming quirk while maintaining native `fd` on Arch.
 - **Neovim Updater**: Installs an `update-nvim` helper function to pull and link the latest Neovim AppImage directly.
+
+---
+
+## 🎨 Customizing & Moving Prompt Components
+
+`bzsh` manages prompt layout inside `~/.config/bzsh/prompt.bzsh`. The default multi-line prompt is built from modular helper components:
+
+```zsh
+PROMPT='$(_os_info)%F{blue}%~%f $(_git_status)$(_sdk_info)${_CMD_ELAPSED}
+$(_venv_info)%F{green}%n@%m%f%# '
+```
+
+### Available Components
+
+| Component | Description | Example Output |
+| :--- | :--- | :--- |
+| `$(_os_info)` | OS / Distro badge | `%F{cyan}[ARCH]%f ` or `%F{red}[DEB]%f ` |
+| `%F{blue}%~%f` | Current directory path | `~/projects/bzsh` |
+| `$(_git_status)` | Active Git branch & dirty state | `%F{magenta}+main*%f ` |
+| `$(_sdk_info)` | Detected project runtime / SDK | `%F{cyan}[Go v1.22]%f `, `[Py v3.12]`, etc. |
+| `${_CMD_ELAPSED}` | Command execution time (if ≥0.1s) | `%F{yellow}took 1.2s%f` |
+| `$(_venv_info)` | Python venv / Conda environment | `%F{yellow}(myenv)%f ` |
+| `%F{green}%n@%m%f%# ` | User, host, and prompt symbol (`%` / `#`) | `user@host% ` |
+
+### Example: Moving `[OS_info]` Before Prompt Symbol `%`
+
+If you want to move prompt components around—for instance, moving `[OS_info]` from the top-left corner to right before the `%` prompt symbol on the second line—edit `~/.config/bzsh/prompt.bzsh` (or set `PROMPT` in your `.zshrc`):
+
+```zsh
+# Modified PROMPT with [OS_info] placed right before the prompt symbol '%'
+PROMPT='%F{blue}%~%f $(_git_status)$(_sdk_info)${_CMD_ELAPSED}
+$(_venv_info)%F{green}%n@%m%f $(_os_info)%# '
+```
 
 ---
 
