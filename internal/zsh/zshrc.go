@@ -20,6 +20,7 @@ const (
 
 // ConfigOptions holds feature toggle choices selected during setup.
 type ConfigOptions struct {
+	NerdFonts           bool
 	PromptDecorator     bool
 	Autocomplete        bool
 	HistorySettings     bool
@@ -112,6 +113,13 @@ func GenerateConfigBlock(opts ConfigOptions, paths *ConfigPaths) (string, error)
 	sb.WriteString(StartMarker + "\n")
 	sb.WriteString("# This block is managed by bzsh. Do not edit manually.\n\n")
 
+	// 0. Nerd Fonts Configuration
+	if opts.NerdFonts {
+		sb.WriteString("# Nerd Font icons enabled\nexport BZSH_NERD_FONTS=1\n\n")
+	} else {
+		sb.WriteString("# Nerd Font icons disabled (clean text fallback mode)\nexport BZSH_NERD_FONTS=0\n\n")
+	}
+
 	// 1. Prompt Decorator
 	if opts.PromptDecorator {
 		if err := WriteEmbeddedScript("prompt.bzsh", paths.ConfigDir); err != nil {
@@ -164,12 +172,16 @@ func GenerateConfigBlock(opts ConfigOptions, paths *ConfigPaths) (string, error)
 
 	// 6. Eza Aliases
 	if opts.EzaAliases {
-		sb.WriteString("# Eza Aliases\n" +
-			"if command -v eza &>/dev/null; then\n" +
-			"  alias ls=\"eza --icons=always --colour=always\"\n" +
-			"  alias la=\"eza -alog --git --icons=always --colour=always\"\n" +
-			"  alias ll=\"eza -log --git --icons=always --colour=always\"\n" +
-			"fi\n\n")
+		iconFlag := "--icons=never"
+		if opts.NerdFonts {
+			iconFlag = "--icons=always"
+		}
+		sb.WriteString(fmt.Sprintf("# Eza Aliases\n"+
+			"if command -v eza &>/dev/null; then\n"+
+			"  alias ls=\"eza %s --colour=always\"\n"+
+			"  alias la=\"eza -alog --git %s --colour=always\"\n"+
+			"  alias ll=\"eza -log --git %s --colour=always\"\n"+
+			"fi\n\n", iconFlag, iconFlag, iconFlag))
 	}
 
 	// 7. Bat Alias (distro specific)
