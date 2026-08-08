@@ -2,36 +2,34 @@
 
 BzSh configures a beautiful prompt, sets up handy autocomplete, tunes history, and plugs in modern CLI tools like `eza`, `bat`, and `zoxide`.
 
-Now powered by a fast, single Go binary with embedded scripts and native distro detection (Debian/Ubuntu & Arch Linux)!
-
 ---
 
 *(Note for Matt: `go build` after making changes!!!)*
 
 ## 💡 Why bzsh?
 
-I build started this project after encountering a few issues:
+I started this project after using [Starship](https://starship.rs/) and encountering a few issues:
 1. There was a prompt offset bug with starship where whenever i SSH'd into another machine, the prompt would be offset by a few characters.
-2. I found prompt artifacts were common and could only be cleared when clearing my terminal via `^L`
+2. I found prompt artifacts were common and could only be cleared when clearing my terminal via `^L`.
 
 `bzsh` was built as a lightweight personal alternative:
-- **Flawless SSH & Remote Compatibility**: Built with native Zsh prompt expansions and hooks, eliminating prompt offset rendering bugs over SSH i encountered.
+- **SSH & Remote Compatibility**: Built with native Zsh prompt expansions and hooks, eliminating prompt offset rendering bugs over SSH i encountered.
 - **Fast & Self-Contained**: Powered by a fast Go binary with embedded Zsh scripts, providing automatic package detection for Debian/Ubuntu and Arch Linux.
 - **All-in-One Shell Enhancement**: Installs a clean multi-line prompt decorator, smart autocomplete, synchronized history, arrow-key history search, and modern CLI tool integrations.
 
 ---
 
-## 🚀 Quick Install (One-Liner)
+## 🚀 Quick Install 
 
-If you're on a fresh system and want to get set up immediately:
+Installer installs Bzsh, [Eza](https://github.com/eza-community/eza), [bat](https://github.com/sharkdp/bat), [zoxide](https://github.com/ajeetdsouza/zoxide) as needed
 
+1. Download the bzsh binary
 ```bash
-# 1. Download the bzsh binary
 curl -fsSL https://raw.githubusercontent.com/notasandworm/bzsh/main/install.sh | sh
 ```
 
+2. Run setup to configure your shell
 ```bash
-# 2. Run setup to configure your shell
 bzsh setup
 ```
 
