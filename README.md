@@ -83,31 +83,36 @@ Once installed, the `bzsh` binary is available in your PATH at `~/.local/bin/bzs
 `bzsh` manages prompt layout inside `~/.config/bzsh/prompt.bzsh`. The default multi-line prompt is built from modular helper components:
 
 ```zsh
-PROMPT='$(_os_info)%F{blue}%~%f $(_git_status)$(_sdk_info)${_CMD_ELAPSED}
-$(_venv_info)%F{green}%n@%m%f%# '
+PROMPT='%F{blue}%~%f$(_git_status)$(_sdk_info)${_CMD_ELAPSED}
+$(_venv_info)%F{green}%n@%m%f$(_os_info)%# '
 ```
 
 ### Available Components
 
 | Component | Description | Example Output |
 | :--- | :--- | :--- |
-| `$(_os_info)` | OS / Distro badge | `%F{cyan}[ARCH]%f ` or `%F{red}[DEB]%f ` |
-| `%F{blue}%~%f` | Current directory path | `~/projects/bzsh` |
-| `$(_git_status)` | Active Git branch & dirty state | `%F{magenta}+main*%f ` |
-| `$(_sdk_info)` | Detected project runtime / SDK | `%F{cyan}[Go v1.22]%f `, `[Py v3.12]`, etc. |
-| `${_CMD_ELAPSED}` | Command execution time (if ≥0.1s) | `%F{yellow}took 1.2s%f` |
-| `$(_venv_info)` | Python venv / Conda environment | `%F{yellow}(myenv)%f ` |
-| `%F{green}%n@%m%f%# ` | User, host, and prompt symbol (`%` / `#`) | `user@host% ` |
+| `%F{blue}%~%f` | Current working directory | `~/projects/bzsh` |
+| `$(_git_status)` | Active Git branch & dirty state | ` +main*` |
+| `$(_sdk_info)` | Detected project runtime / SDK | ` [Go v1.22]`, ` [Py v3.12]`, etc. |
+| `${_CMD_ELAPSED}` | Command execution time (if ≥0.1s) | ` took 1.2s` |
+| `$(_venv_info)` | Python venv / Conda environment | `(myenv) ` |
+| `%F{green}%n@%m%f` | User and host name | `user@host` |
+| `$(_os_info)` | OS / Distro badge | `[ARCH]`, `[DEB]`, or `[LINUX]` |
+| `%# ` | Prompt symbol (`%` for regular user, `#` for root) | `% ` |
 
-### Example: Moving `[OS_info]` Before Prompt Symbol `%`
+### 📐 Component Spacing & Separator Rules
 
-If you want to move prompt components around—for instance, moving `[OS_info]` from the top-left corner to right before the `%` prompt symbol on the second line—edit `~/.config/bzsh/prompt.bzsh` (or set `PROMPT` in your `.zshrc`):
+`bzsh` helper functions do not append trailing spaces, enabling total control over layout:
 
-```zsh
-# Modified PROMPT with [OS_info] placed right before the prompt symbol '%'
-PROMPT='%F{blue}%~%f $(_git_status)$(_sdk_info)${_CMD_ELAPSED}
-$(_venv_info)%F{green}%n@%m%f $(_os_info)%# '
-```
+- **Spaced First Line**: Optional components (`$(_git_status)`, `$(_sdk_info)`, `${_CMD_ELAPSED}`) automatically include a single leading space when active, producing cleanly separated top lines like:
+  `~/lab/source/bzsh +dev* [Go v1.26.5] took 1.2s`
+- **Compact Second Line**: Placing `$(_os_info)` directly adjacent to `%F{green}%n@%m%f` without spaces creates a sleek compact line:
+  `$(_venv_info)%F{green}%n@%m%f$(_os_info)%# ` $\rightarrow$ `matt@mattlab[DEB]% `
+
+> [!NOTE]
+> **Case Sensitivity Rules in Zsh Prompt**:
+> - **Color Codes**: Use uppercase `%F{color}` to set a foreground color (e.g., `%F{blue}`). Using lowercase `%f{blue}` will output literal text `{blue}` because lowercase `%f` resets the color and prints `{blue}`.
+> - **Variables**: Variables like `${_CMD_ELAPSED}` are uppercase.
 
 ---
 
