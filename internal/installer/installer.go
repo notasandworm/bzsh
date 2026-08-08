@@ -2,7 +2,10 @@ package installer
 
 import (
 	"fmt"
+	"io"
+	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 
 	"github.com/notasandworm/bzsh/internal/distro"
@@ -99,7 +102,13 @@ func RunSetup(interactive bool) error {
 		nvimUpdaterChoice = ui.AskYesNo("Add Neovim updater (update-nvim) helper function?", true, autoYes)
 	}
 
+	if !autoYes {
+		ui.PrintNerdFontTest()
+	}
+	nerdFontChoice := ui.AskYesNo("Enable Nerd Font icons for shell prompt and eza aliases?", true, autoYes)
+
 	opts := zsh.ConfigOptions{
+		NerdFonts:         nerdFontChoice,
 		PromptDecorator:   ui.AskYesNo("Set Busy Shell as prompt decorator?", true, autoYes),
 		Autocomplete:      ui.AskYesNo("Enable Busy Shell Autocomplete system?", true, autoYes),
 		HistorySettings:   ui.AskYesNo("Allow Busy Shell to configure Zsh History settings?", true, autoYes),
@@ -234,3 +243,72 @@ func RunUninstall(autoYes bool) error {
 	ui.PrintFooter()
 	return nil
 }
+
+// RunFontInstall downloads and installs SymbolsNerdFontMono-Regular.ttf into ~/.local/share/fonts/
+func RunFontInstall() error {
+	ui.PrintTitle()
+	ui.PrintStep("Starting Nerd Font download and installation...")
+
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return fmt.Errorf("failed to get user home directory: %w", err)
+	}
+
+	fontsDir := filepath.Join(homeDir, ".local", "share", "fonts")
+	if err := os.MkdirAll(fontsDir, 0755); err != nil {
+		return fmt.Errorf("failed to create fonts directory %s: %w", fontsDir, err)
+	}
+
+	fontURL := "https://github.com/ryanoasis/nerd-fonts/raw/main/patched-fonts/NerdFontsSymbolsOnly/SymbolsNerdFontMono-Regular.ttf"
+	targetFontPath := filepath.Join(fontsDir, "SymbolsNerdFontMono-Regular.ttf")
+
+	ui.PrintStep(fmt.Sprintf("Downloading SymbolsNerdFontMono-Regular.ttf to %s...", fontsDir))
+
+	if err := downloadFontFile(fontURL, targetFontPath); err != nil {
+		return fmt.Errorf("failed downloading font: %w", err)
+	}
+
+	ui.PrintOK("Font downloaded successfully!")
+
+	// Refresh font cache if fc-cache is present
+	if _, err := exec.LookPath("fc-cache"); err == nil {
+		ui.PrintStep("Updating desktop font cache with fc-cache -fv...")
+		cmd := exec.Command("fc-cache", "-fv")
+		_ = cmd.Run()
+		ui.PrintOK("Font cache refreshed.")
+	}
+
+	ui.PrintOK("Nerd Font symbols installed to ~/.local/share/fonts/!")
+	fmt.Println()
+	ui.PrintWarn("Note: Terminal emulators (Alacritty, Kitty, VS Code, iTerm2, etc.) require selecting")
+	fmt.Println("      the Nerd Font or font fallback in their app settings for icons to display!")
+	ui.PrintFooter()
+	return nil
+}
+
+func downloadFontFile(url string, dest string) error {
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return err
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("HTTP error status %d", resp.StatusCode)
+	}
+
+	out, err := os.Create(dest)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	_, err = io.Copy(out, resp.Body)
+	return err
+}
+

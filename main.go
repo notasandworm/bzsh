@@ -64,6 +64,12 @@ func main() {
 			os.Exit(1)
 		}
 
+	case "font", "install-font":
+		if err := installer.RunFontInstall(); err != nil {
+			ui.PrintError(fmt.Sprintf("Font installation failed: %v", err))
+			os.Exit(1)
+		}
+
 	case "help", "-h", "--help":
 		showHelp()
 
@@ -81,6 +87,7 @@ func showHelp() {
 	fmt.Println("Commands:")
 	fmt.Println("  setup        Run the installation process (defaults to auto-yes)")
 	fmt.Println("  update       Refresh script files and update local binary")
+	fmt.Println("  font         Download and install SymbolsNerdFontMono to ~/.local/share/fonts/")
 	fmt.Println("  uninstall    Remove bzsh settings and configuration folders")
 	fmt.Println("  help         Show this help message")
 	fmt.Println()

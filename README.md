@@ -68,11 +68,28 @@ Once installed, the `bzsh` binary is available in your PATH at `~/.local/bin/bzs
 - **Keybindings**: Prefix history search with arrow keys (type `git` and press Up to search `git` commands).
 - **Better Shell Defaults**: Suppresses annoyances like system beeps and enables automatic `cd`.
 - **Modern CLI Tools (Distro-Aware)**:
-  - `eza` aliases (`ls`, `la`, `ll` with icons and Git statuses).
+  - `eza` aliases (`ls`, `la`, `ll` with dynamic icon support based on Nerd Font preference).
   - `bat` syntax highlighting (`batcat` on Debian, `bat` on Arch).
   - `zoxide` integration for jumping around folders fast.
   - Automatically handles Debian's `fd-find` naming quirk while maintaining native `fd` on Arch.
+- **Nerd Fonts & Dual-Mode Symbol Support**: Rich icon mode with automatic clean text fallback for systems without Nerd Fonts installed (`bzsh font` command included).
 - **Neovim Updater**: Installs an `update-nvim` helper function to pull and link the latest Neovim AppImage directly.
+
+---
+
+## 🔤 Nerd Font Support & Symbol Downloader
+
+`bzsh` supports a dual-mode symbol architecture to ensure your prompt and `eza` look great with rich Nerd Font icons when available, while completely avoiding missing character boxes or squares (`[?]`) on basic terminals:
+
+- **Nerd Font Mode (`BZSH_NERD_FONTS=1`)**: Renders rich glyphs for OS (`󰣇`, ``, `🐧`), Git (``), and project runtimes (Go ``, Python ``, Rust ``, Node ``, C++ ``, C ``, CMake/ESP-IDF ``, Docker `󰡨`).
+- **Clean Text Mode (`BZSH_NERD_FONTS=0`)**: Automatically falls back to clean, readable text tags (`[ARCH]`, `[DEB]`, `+main`, `[C++]`, `[C]`, `[ESP-IDF]`, `[Go]`, etc.).
+
+### Automatic Font Downloader
+To download and install the official `SymbolsNerdFontMono` font into `~/.local/share/fonts/` and update your desktop font cache:
+
+```bash
+bzsh font
+```
 
 ---
 
@@ -87,30 +104,16 @@ $(_venv_info)%F{green}%n@%m%f$(_os_info)%# '
 
 ### Available Components
 
-| Component | Description | Example Output |
-| :--- | :--- | :--- |
-| `%F{blue}%~%f` | Current working directory | `~/projects/bzsh` |
-| `$(_git_status)` | Active Git branch & dirty state | ` +main*` |
-| `$(_sdk_info)` | Detected project runtime / SDK | ` [Go v1.22]`, ` [Py v3.12]`, etc. |
-| `${_CMD_ELAPSED}` | Command execution time (if ≥0.1s) | ` took 1.2s` |
-| `$(_venv_info)` | Python venv / Conda environment | `(myenv) ` |
-| `%F{green}%n@%m%f` | User and host name | `user@host` |
-| `$(_os_info)` | OS / Distro badge | `[ARCH]`, `[DEB]`, or `[LINUX]` |
-| `%# ` | Prompt symbol (`%` for regular user, `#` for root) | `% ` |
-
-### 📐 Component Spacing & Separator Rules
-
-`bzsh` helper functions do not append trailing spaces, enabling total control over layout:
-
-- **Spaced First Line**: Optional components (`$(_git_status)`, `$(_sdk_info)`, `${_CMD_ELAPSED}`) automatically include a single leading space when active, producing cleanly separated top lines like:
-  `~/lab/source/bzsh +dev* [Go v1.26.5] took 1.2s`
-- **Compact Second Line**: Placing `$(_os_info)` directly adjacent to `%F{green}%n@%m%f` without spaces creates a sleek compact line:
-  `$(_venv_info)%F{green}%n@%m%f$(_os_info)%# ` $\rightarrow$ `matt@mattlab[DEB]% `
-
-> [!NOTE]
-> **Case Sensitivity Rules in Zsh Prompt**:
-> - **Color Codes**: Use uppercase `%F{color}` to set a foreground color (e.g., `%F{blue}`). Using lowercase `%f{blue}` will output literal text `{blue}` because lowercase `%f` resets the color and prints `{blue}`.
-> - **Variables**: Variables like `${_CMD_ELAPSED}` are uppercase.
+| Component | Description | Rich Icon Output (`BZSH_NERD_FONTS=1`) | Fallback Output (`BZSH_NERD_FONTS=0`) |
+| :--- | :--- | :--- | :--- |
+| `%F{blue}%~%f` | Current working directory | `~/projects/bzsh` | `~/projects/bzsh` |
+| `$(_git_status)` | Active Git branch & dirty state | `  main*` | ` +main*` |
+| `$(_sdk_info)` | Detected project runtime / SDK | `  v1.22`, `  C++`, `  ESP-IDF` | ` [Go v1.22]`, ` [C++]`, ` [ESP-IDF]` |
+| `${_CMD_ELAPSED}` | Command execution time (if ≥0.1s) | ` took 1.2s` | ` took 1.2s` |
+| `$(_venv_info)` | Python venv / Conda environment | `(myenv) ` | `(myenv) ` |
+| `%F{green}%n@%m%f` | User and host name | `user@host` | `user@host` |
+| `$(_os_info)` | OS / Distro badge | `󰣇 `, ` `, or `🐧` | `[ARCH]`, `[DEB]`, or `[LINUX]` |
+| `%# ` | Prompt symbol (`%` for user, `#` for root) | `% ` | `% ` |
 
 ---
 
