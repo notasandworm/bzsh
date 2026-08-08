@@ -25,6 +25,24 @@ func PrintTitle() {
 	fmt.Printf("%s=========================%s\n\n", ColorBlue, ColorReset)
 }
 
+// PrintNerdFontTest outputs a sample rendering test to check for Nerd Font support.
+func PrintNerdFontTest() {
+	fmt.Println()
+	fmt.Printf("%s➜ Icon Rendering Test:%s\n", ColorCyan, ColorReset)
+	fmt.Println("  Do you see these icons properly without boxes [?] or squares?")
+	fmt.Printf("  Icons:  %s󰅶%s (bzsh)   %s󰣇%s (arch)   %s%s (git)   %s%s (c++)   %s%s (c)   %s%s (cmake)   %s%s (go)   %s%s (python)   %s󰡨%s (docker)\n\n",
+		ColorBlue, ColorReset,
+		ColorCyan, ColorReset,
+		ColorMagenta, ColorReset,
+		ColorBlue, ColorReset,
+		ColorBlue, ColorReset,
+		ColorBlue, ColorReset,
+		ColorCyan, ColorReset,
+		ColorYellow, ColorReset,
+		ColorBlue, ColorReset,
+	)
+}
+
 // PrintStep displays a step in progress.
 func PrintStep(msg string) {
 	fmt.Printf("%s➜%s %s\n", ColorCyan, ColorReset, msg)
