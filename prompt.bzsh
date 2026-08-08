@@ -58,15 +58,34 @@ _os_info() {
     local os_like
     os_like=$(grep -i '^ID_LIKE=' /etc/os-release | cut -d= -f2 | tr -d '"')
 
-    if [[ "$os_id" == *"arch"* || "$os_like" == *"arch"* ]]; then
-      echo "%F{cyan}[ARCH]%f"
+    if [[ "$BZSH_NERD_FONTS" == "1" ]]; then
+      if [[ "$os_id" == *"arch"* || "$os_like" == *"arch"* ]]; then
+        echo "%F{cyan}󰣇 %f"
+        return
+      elif [[ "$os_id" == *"debian"* || "$os_id" == *"ubuntu"* || "$os_id" == *"pop"* || "$os_id" == *"mint"* || "$os_like" == *"debian"* || "$os_like" == *"ubuntu"* ]]; then
+        echo "%F{red} %f"
+        return
+      fi
+      echo "%F{green}🐧%f"
       return
-    elif [[ "$os_id" == *"debian"* || "$os_id" == *"ubuntu"* || "$os_id" == *"pop"* || "$os_id" == *"mint"* || "$os_like" == *"debian"* || "$os_like" == *"ubuntu"* ]]; then
-      echo "%F{red}[DEB]%f"
+    else
+      if [[ "$os_id" == *"arch"* || "$os_like" == *"arch"* ]]; then
+        echo "%F{cyan}[ARCH]%f"
+        return
+      elif [[ "$os_id" == *"debian"* || "$os_id" == *"ubuntu"* || "$os_id" == *"pop"* || "$os_id" == *"mint"* || "$os_like" == *"debian"* || "$os_like" == *"ubuntu"* ]]; then
+        echo "%F{red}[DEB]%f"
+        return
+      fi
+      echo "%F{green}[LINUX]%f"
       return
     fi
   fi
-  echo "%F{green}[LINUX]%f"
+
+  if [[ "$BZSH_NERD_FONTS" == "1" ]]; then
+    echo "%F{green}🐧%f"
+  else
+    echo "%F{green}[LINUX]%f"
+  fi
 }
 
 _git_status() {
@@ -80,7 +99,11 @@ _git_status() {
     dirty="*"
   fi
 
-  echo " %F{magenta}+${branch}${dirty}%f"
+  if [[ "$BZSH_NERD_FONTS" == "1" ]]; then
+    echo " %F{magenta} ${branch}${dirty}%f"
+  else
+    echo " %F{magenta}+${branch}${dirty}%f"
+  fi
 }
 
 _sdk_info() {
@@ -91,31 +114,78 @@ _sdk_info() {
     else
       go_ver=$(awk '/^go / {print $2}' go.mod 2>/dev/null)
     fi
-    echo " %F{cyan}[Go v${go_ver:-1}]%f"
+    if [[ "$BZSH_NERD_FONTS" == "1" ]]; then
+      echo " %F{cyan} v${go_ver:-1}%f"
+    else
+      echo " %F{cyan}[Go v${go_ver:-1}]%f"
+    fi
 
   elif [[ -f pyproject.toml || -f uv.lock || -f requirements.txt ]]; then
     local py_ver=""
     if command -v python3 &>/dev/null; then
       py_ver=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")' 2>/dev/null)
     fi
-    echo " %F{yellow}[Py v${py_ver:-3}]%f"
+    if [[ "$BZSH_NERD_FONTS" == "1" ]]; then
+      echo " %F{yellow} v${py_ver:-3}%f"
+    else
+      echo " %F{yellow}[Py v${py_ver:-3}]%f"
+    fi
 
   elif [[ -f Cargo.toml ]]; then
     local rust_ver=""
     if command -v rustc &>/dev/null; then
       rust_ver=$(rustc --version 2>/dev/null | awk '{print $2}')
     fi
-    echo " %F{red}[Rust v${rust_ver:-1}]%f"
+    if [[ "$BZSH_NERD_FONTS" == "1" ]]; then
+      echo " %F{red} v${rust_ver:-1}%f"
+    else
+      echo " %F{red}[Rust v${rust_ver:-1}]%f"
+    fi
 
   elif [[ -f package.json ]]; then
     local node_ver=""
     if command -v node &>/dev/null; then
       node_ver=$(node -v 2>/dev/null | sed 's/^v//')
     fi
-    echo " %F{green}[Node v${node_ver:-18}]%f"
+    if [[ "$BZSH_NERD_FONTS" == "1" ]]; then
+      echo " %F{green} v${node_ver:-18}%f"
+    else
+      echo " %F{green}[Node v${node_ver:-18}]%f"
+    fi
+
+  elif [[ -f sdkconfig ]]; then
+    if [[ "$BZSH_NERD_FONTS" == "1" ]]; then
+      echo " %F{blue} ESP-IDF%f"
+    else
+      echo " %F{blue}[ESP-IDF]%f"
+    fi
+
+  elif [[ -f CMakeLists.txt || -f Makefile || -f makefile || -f GNUmakefile || -f platformio.ini || -f meson.build ]]; then
+    local lang="C/C++"
+    local icon=""
+    if [[ -n $(ls *.cpp *.cxx *.cc *.hpp 2>/dev/null | head -n 1) ]]; then
+      lang="C++"
+      icon=""
+    elif [[ -n $(ls *.c *.h 2>/dev/null | head -n 1) ]]; then
+      lang="C"
+      icon=""
+    elif [[ -f CMakeLists.txt ]]; then
+      lang="CMake"
+      icon=""
+    fi
+
+    if [[ "$BZSH_NERD_FONTS" == "1" ]]; then
+      echo " %F{blue}${icon} ${lang}%f"
+    else
+      echo " %F{blue}[${lang}]%f"
+    fi
 
   elif [[ -f Containerfile || -f Dockerfile || -f compose.yaml || -f docker-compose.yml ]]; then
-    echo " %F{blue}[Docker]%f"
+    if [[ "$BZSH_NERD_FONTS" == "1" ]]; then
+      echo " %F{blue}󰡨 Docker%f"
+    else
+      echo " %F{blue}[Docker]%f"
+    fi
   fi
 }
 
