@@ -64,7 +64,11 @@ fi
 
 chmod +x "$BIN_DIR/bzsh"
 
-echo ""
-echo "✔ Successfully installed bzsh binary to $BIN_DIR/bzsh!"
+INSTALLED_VER=$("$BIN_DIR/bzsh" --version 2>/dev/null | grep -i 'bzsh version' | head -n 1)
+if [ -n "$INSTALLED_VER" ]; then
+  echo "✔ Successfully installed $INSTALLED_VER to $BIN_DIR/bzsh!"
+else
+  echo "✔ Successfully installed bzsh binary to $BIN_DIR/bzsh!"
+fi
 echo "➜ Run 'bzsh setup' to start the installation."
 echo ""
