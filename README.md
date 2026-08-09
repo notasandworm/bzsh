@@ -8,9 +8,9 @@ BzSh configures a beautiful prompt, sets up handy autocomplete, tunes history, a
 
 ## 💡 Why bzsh?
 
-I started this project after using [Starship](https://starship.rs/) and encountering a few issues:
-1. There was a prompt offset bug with starship where whenever i SSH'd into another machine, the prompt would be offset by a few characters.
-2. I found prompt artifacts were common and could only be cleared when clearing my terminal via `^L`.
+I started this project after using nerd font capable prompt decorators like [Starship](https://starship.rs/) and encountering a few issues:
+1. There is a prompt offset bug with nerd fonts on the same line as the prompt starship where the prompt would be offset by a few characters.
+2. When this happened, I found prompt artifacts were common and could only be cleared when clearing my terminal via `[^l]`.
 
 `bzsh` was built as a lightweight personal alternative:
 - **SSH & Remote Compatibility**: Built with native Zsh prompt expansions and hooks, eliminating prompt offset rendering bugs over SSH i encountered.
