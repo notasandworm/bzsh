@@ -202,7 +202,8 @@ _venv_info() {
 # ------------------------------------------------------------------------------
 # 3. Prompt Assembly
 # ------------------------------------------------------------------------------
-PROMPT='%F{blue}%~%f$(_git_status)$(_sdk_info)${_CMD_ELAPSED}
-$(_venv_info)%F{green}%n@%m%f$(_os_info)%# '
+PROMPT='$(_os_info) %F{blue}%~%f$(_git_status)$(_sdk_info)${_CMD_ELAPSED}
+$(_venv_info)%F{green}%n@%m%f%# '
+
 
 

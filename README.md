@@ -98,8 +98,8 @@ bzsh font
 `bzsh` manages prompt layout inside `~/.config/bzsh/prompt.bzsh`. The default multi-line prompt is built from modular helper components:
 
 ```zsh
-PROMPT='%F{blue}%~%f$(_git_status)$(_sdk_info)${_CMD_ELAPSED}
-$(_venv_info)%F{green}%n@%m%f$(_os_info)%# '
+PROMPT='$(_os_info) %F{blue}%~%f$(_git_status)$(_sdk_info)${_CMD_ELAPSED}
+$(_venv_info)%F{green}%n@%m%f%# '
 ```
 
 ### Available Components
