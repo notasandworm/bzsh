@@ -163,10 +163,12 @@ _sdk_info() {
   elif [[ -f CMakeLists.txt || -f Makefile || -f makefile || -f GNUmakefile || -f platformio.ini || -f meson.build ]]; then
     local lang="C/C++"
     local icon=""
-    if [[ -n $(ls *.cpp *.cxx *.cc *.hpp 2>/dev/null | head -n 1) ]]; then
+    local cpp_match=(*.(cpp|cxx|cc|hpp)(N[1]))
+    local c_match=(*.(c|h)(N[1]))
+    if (( ${#cpp_match} > 0 )); then
       lang="C++"
       icon=""
-    elif [[ -n $(ls *.c *.h 2>/dev/null | head -n 1) ]]; then
+    elif (( ${#c_match} > 0 )); then
       lang="C"
       icon=""
     elif [[ -f CMakeLists.txt ]]; then
