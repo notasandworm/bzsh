@@ -18,11 +18,38 @@ const (
 	ColorMagenta = "\033[1;35m"
 )
 
+// Version holds the current release version of bzsh.
+// Can be overridden at build time via -ldflags "-X github.com/notasandworm/bzsh/internal/ui.Version=vX.Y.Z"
+var Version = "v0.2.0"
+
 // PrintTitle outputs our signature Busy Shell (bzsh) header!
 func PrintTitle() {
 	fmt.Println()
-	fmt.Printf("%s󰅶 Busy Shell (bzsh) CLI%s\n", ColorBlue, ColorReset)
-	fmt.Printf("%s=========================%s\n\n", ColorBlue, ColorReset)
+	fmt.Printf("%s󰅶 Busy Shell (bzsh) CLI %s%s\n", ColorBlue, Version, ColorReset)
+	fmt.Printf("%s=============================%s\n\n", ColorBlue, ColorReset)
+}
+
+// PrintVersion outputs the bzsh binary version.
+func PrintVersion() {
+	fmt.Printf("bzsh version %s\n", Version)
+}
+
+// PrintNerdFontTest outputs a sample rendering test to check for Nerd Font support.
+func PrintNerdFontTest() {
+	fmt.Println()
+	fmt.Printf("%s➜ Icon Rendering Test:%s\n", ColorCyan, ColorReset)
+	fmt.Println("  Do you see these icons properly without boxes [?] or squares?")
+	fmt.Printf("  Icons:  %s󰅶%s (bzsh)   %s󰣇%s (arch)   %s%s (git)   %s%s (c++)   %s%s (c)   %s%s (cmake)   %s%s (go)   %s%s (python)   %s󰡨%s (docker)\n\n",
+		ColorBlue, ColorReset,
+		ColorCyan, ColorReset,
+		ColorMagenta, ColorReset,
+		ColorBlue, ColorReset,
+		ColorBlue, ColorReset,
+		ColorBlue, ColorReset,
+		ColorCyan, ColorReset,
+		ColorYellow, ColorReset,
+		ColorBlue, ColorReset,
+	)
 }
 
 // PrintStep displays a step in progress.

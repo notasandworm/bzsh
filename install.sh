@@ -23,8 +23,9 @@ case "$ARCH" in
   *)       ARCH_NAME="amd64" ;;
 esac
 
+BRANCH="${BZSH_BRANCH:-main}"
 BINARY_URL="https://github.com/notasandworm/bzsh/releases/latest/download/bzsh-linux-${ARCH_NAME}"
-RAW_URL="https://raw.githubusercontent.com/notasandworm/bzsh/main/bzsh"
+RAW_URL="https://raw.githubusercontent.com/notasandworm/bzsh/${BRANCH}/bzsh"
 
 DOWNLOAD_SUCCESS=0
 
@@ -39,12 +40,22 @@ download_file() {
   return 1
 }
 
-# 1. Attempt download from GitHub Release assets
-if download_file "$BINARY_URL" "$BIN_DIR/bzsh"; then
-  DOWNLOAD_SUCCESS=1
+# 1. If BZSH_BRANCH is set (e.g. BZSH_BRANCH=dev), prioritize raw branch binary for testing
+if [ -n "$BZSH_BRANCH" ]; then
+  echo "➜ Fetching bzsh binary from '${BZSH_BRANCH}' branch..."
+  if download_file "$RAW_URL" "$BIN_DIR/bzsh"; then
+    DOWNLOAD_SUCCESS=1
+  fi
 fi
 
-# 2. Fallback: Attempt download from raw GitHub repository (main branch)
+# 2. Attempt download from GitHub Release assets (standard release install)
+if [ "$DOWNLOAD_SUCCESS" -ne 1 ]; then
+  if download_file "$BINARY_URL" "$BIN_DIR/bzsh"; then
+    DOWNLOAD_SUCCESS=1
+  fi
+fi
+
+# 3. Fallback: Attempt download from raw GitHub repository
 if [ "$DOWNLOAD_SUCCESS" -ne 1 ]; then
   if download_file "$RAW_URL" "$BIN_DIR/bzsh"; then
     DOWNLOAD_SUCCESS=1
@@ -64,7 +75,11 @@ fi
 
 chmod +x "$BIN_DIR/bzsh"
 
-echo ""
-echo "✔ Successfully installed bzsh binary to $BIN_DIR/bzsh!"
+INSTALLED_VER=$("$BIN_DIR/bzsh" --version 2>/dev/null | grep -i 'bzsh version' | head -n 1)
+if [ -n "$INSTALLED_VER" ]; then
+  echo "✔ Successfully installed $INSTALLED_VER to $BIN_DIR/bzsh!"
+else
+  echo "✔ Successfully installed bzsh binary to $BIN_DIR/bzsh!"
+fi
 echo "➜ Run 'bzsh setup' to start the installation."
 echo ""

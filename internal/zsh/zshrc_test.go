@@ -3,6 +3,7 @@ package zsh
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -155,4 +156,46 @@ func TestEmbeddedScriptsMatchRoot(t *testing.T) {
 		}
 	}
 }
+
+func TestGenerateConfigBlockNerdFonts(t *testing.T) {
+	tmpDir := t.TempDir()
+	paths := &ConfigPaths{
+		ZshrcFile: filepath.Join(tmpDir, ".zshrc"),
+		ConfigDir: filepath.Join(tmpDir, ".config", "bzsh"),
+		BinDir:    filepath.Join(tmpDir, ".local", "bin"),
+	}
+
+	// Case 1: NerdFonts = true
+	optsEnabled := ConfigOptions{
+		NerdFonts:  true,
+		EzaAliases: true,
+	}
+	blockEnabled, err := GenerateConfigBlock(optsEnabled, paths)
+	if err != nil {
+		t.Fatalf("GenerateConfigBlock failed: %v", err)
+	}
+	if !strings.Contains(blockEnabled, "export BZSH_NERD_FONTS=1") {
+		t.Errorf("expected BZSH_NERD_FONTS=1 in config block")
+	}
+	if !strings.Contains(blockEnabled, "--icons=always") {
+		t.Errorf("expected eza --icons=always when NerdFonts=true")
+	}
+
+	// Case 2: NerdFonts = false
+	optsDisabled := ConfigOptions{
+		NerdFonts:  false,
+		EzaAliases: true,
+	}
+	blockDisabled, err := GenerateConfigBlock(optsDisabled, paths)
+	if err != nil {
+		t.Fatalf("GenerateConfigBlock failed: %v", err)
+	}
+	if !strings.Contains(blockDisabled, "export BZSH_NERD_FONTS=0") {
+		t.Errorf("expected BZSH_NERD_FONTS=0 in config block")
+	}
+	if !strings.Contains(blockDisabled, "--icons=never") {
+		t.Errorf("expected eza --icons=never when NerdFonts=false")
+	}
+}
+
 
