@@ -1,5 +1,5 @@
-# Local AI & tool guidelines
+# Local guidelines & scratch files
 AGENTS.md
-
-# Compiled binaries
-bzsh
+*.scratch
+*.plan
+*.idea

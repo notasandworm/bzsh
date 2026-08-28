@@ -11,10 +11,12 @@ import (
 )
 
 const (
-	StartMarker       = "# >>> bzsh initialize >>>"
-	EndMarker         = "# <<< bzsh initialize <<<"
-	LegacyStartMarker = "# >>> bzhrc initialize >>>"
-	LegacyEndMarker   = "# <<< bzhrc initialize <<<"
+	StartMarker          = "# WARN: >>> bzsh initialize >>>"
+	EndMarker            = "# WARN: <<< bzsh initialize <<<"
+	LegacyStartMarker    = "# >>> bzsh initialize >>>"
+	LegacyEndMarker      = "# <<< bzsh initialize <<<"
+	LegacyOldStartMarker = "# >>> bzhrc initialize >>>"
+	LegacyOldEndMarker   = "# <<< bzhrc initialize <<<"
 )
 
 
@@ -181,7 +183,8 @@ func GenerateConfigBlock(opts ConfigOptions, paths *ConfigPaths) (string, error)
 			"  alias ls=\"eza %s --colour=always\"\n"+
 			"  alias la=\"eza -alog --git %s --colour=always\"\n"+
 			"  alias ll=\"eza -log --git %s --colour=always\"\n"+
-			"fi\n\n", iconFlag, iconFlag, iconFlag))
+			"  alias lls=\"eza %s --colour=always --sort=modified\"\n"+
+			"fi\n\n", iconFlag, iconFlag, iconFlag, iconFlag))
 	}
 
 	// 7. Bat Alias (distro specific)
@@ -221,6 +224,7 @@ func ExtractUserContent(content string) (before string, after string) {
 	startPairs := []struct{ start, end string }{
 		{StartMarker, EndMarker},
 		{LegacyStartMarker, LegacyEndMarker},
+		{LegacyOldStartMarker, LegacyOldEndMarker},
 	}
 
 	for _, pair := range startPairs {

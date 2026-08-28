@@ -9,8 +9,24 @@ import (
 
 func TestExtractUserContentStandardMarkers(t *testing.T) {
 	input := `export PRE_ENV="1"
-# >>> bzsh initialize >>>
+# WARN: >>> bzsh initialize >>>
 # bzsh config block here
+# WARN: <<< bzsh initialize <<<
+alias post_alias="echo hello"
+`
+	before, after := ExtractUserContent(input)
+	if before != "export PRE_ENV=\"1\"\n" {
+		t.Errorf("expected before to be %q, got %q", "export PRE_ENV=\"1\"\n", before)
+	}
+	if after != "\nalias post_alias=\"echo hello\"\n" {
+		t.Errorf("expected after to be %q, got %q", "\nalias post_alias=\"echo hello\"\n", after)
+	}
+}
+
+func TestExtractUserContentLegacyBzshMarkers(t *testing.T) {
+	input := `export PRE_ENV="1"
+# >>> bzsh initialize >>>
+# old bzsh block
 # <<< bzsh initialize <<<
 alias post_alias="echo hello"
 `
@@ -73,9 +89,9 @@ alias my_alias="ls -la"
 
 	expected := `export MY_VAR="true"
 
-# >>> bzsh initialize >>>
+# WARN: >>> bzsh initialize >>>
 # new bzsh block
-# <<< bzsh initialize <<<
+# WARN: <<< bzsh initialize <<<
 
 alias my_alias="ls -la"
 `
@@ -120,9 +136,9 @@ export BACKUP_POST="ok"
 
 	expected := `export BACKUP_PRE="ok"
 
-# >>> bzsh initialize >>>
+# WARN: >>> bzsh initialize >>>
 # new bzsh block
-# <<< bzsh initialize <<<
+# WARN: <<< bzsh initialize <<<
 
 export BACKUP_POST="ok"
 `
@@ -180,6 +196,9 @@ func TestGenerateConfigBlockNerdFonts(t *testing.T) {
 	if !strings.Contains(blockEnabled, "--icons=always") {
 		t.Errorf("expected eza --icons=always when NerdFonts=true")
 	}
+	if !strings.Contains(blockEnabled, "alias lls=\"eza --icons=always --colour=always --sort=modified\"") {
+		t.Errorf("expected lls alias with --icons=always in config block")
+	}
 
 	// Case 2: NerdFonts = false
 	optsDisabled := ConfigOptions{
@@ -196,6 +215,10 @@ func TestGenerateConfigBlockNerdFonts(t *testing.T) {
 	if !strings.Contains(blockDisabled, "--icons=never") {
 		t.Errorf("expected eza --icons=never when NerdFonts=false")
 	}
+	if !strings.Contains(blockDisabled, "alias lls=\"eza --icons=never --colour=always --sort=modified\"") {
+		t.Errorf("expected lls alias with --icons=never in config block")
+	}
 }
+
 
 

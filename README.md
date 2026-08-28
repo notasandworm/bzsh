@@ -68,7 +68,7 @@ Once installed, the `bzsh` binary is available in your PATH at `~/.local/bin/bzs
 - **Keybindings**: Prefix history search with arrow keys (type `git` and press Up to search `git` commands).
 - **Better Shell Defaults**: Suppresses annoyances like system beeps and enables automatic `cd`.
 - **Modern CLI Tools (Distro-Aware)**:
-  - `eza` aliases (`ls`, `la`, `ll` with dynamic icon support based on Nerd Font preference).
+  - `eza` aliases (`ls`, `la`, `ll`, `lls` with dynamic icon support and sort by modified).
   - `bat` syntax highlighting (`batcat` on Debian, `bat` on Arch).
   - `zoxide` integration for jumping around folders fast.
   - Automatically handles Debian's `fd-find` naming quirk while maintaining native `fd` on Arch.
@@ -98,8 +98,8 @@ bzsh font
 `bzsh` manages prompt layout inside `~/.config/bzsh/prompt.bzsh`. The default multi-line prompt is built from modular helper components:
 
 ```zsh
-PROMPT='$(_os_info) %F{blue}%~%f$(_git_status)$(_sdk_info)${_CMD_ELAPSED}
-$(_venv_info)%F{green}%n@%m%f%# '
+PROMPT='$(_os_info) %F{blue}%~%f$(_git_status)$(_sdk_info)$(_venv_info)${_CMD_ELAPSED}
+%F{green}%n@%m%f%# '
 ```
 
 ### Available Components
