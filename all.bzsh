@@ -80,7 +80,7 @@ setopt NO_BEEP                 # Suppress terminal audio alerts
 alias ls="eza --icons=always --colour=always"
 alias la="eza -alog --git --icons=always --colour=always"
 alias ll="eza -log --git --icons=always --colour=always"
-alias lls="eza --icons=always --colour=always --sort=modified"
+alias lls="eza --long --icons=always --colour=always --sort=modified"
 
 # install and alias batcat default to Y?
 alias bat="batcat"

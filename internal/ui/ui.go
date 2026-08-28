@@ -20,7 +20,7 @@ const (
 
 // Version holds the current release version of bzsh.
 // Can be overridden at build time via -ldflags "-X github.com/notasandworm/bzsh/internal/ui.Version=vX.Y.Z"
-var Version = "v2026.8.28-1"
+var Version = "v2026.8.28-2"
 
 // PrintTitle outputs our signature Busy Shell (bzsh) header!
 func PrintTitle() {

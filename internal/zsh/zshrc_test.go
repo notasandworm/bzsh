@@ -196,8 +196,8 @@ func TestGenerateConfigBlockNerdFonts(t *testing.T) {
 	if !strings.Contains(blockEnabled, "--icons=always") {
 		t.Errorf("expected eza --icons=always when NerdFonts=true")
 	}
-	if !strings.Contains(blockEnabled, "alias lls=\"eza --icons=always --colour=always --sort=modified\"") {
-		t.Errorf("expected lls alias with --icons=always in config block")
+	if !strings.Contains(blockEnabled, "alias lls=\"eza --long --icons=always --colour=always --sort=modified\"") {
+		t.Errorf("expected lls alias with --long and --icons=always in config block")
 	}
 
 	// Case 2: NerdFonts = false
@@ -215,9 +215,10 @@ func TestGenerateConfigBlockNerdFonts(t *testing.T) {
 	if !strings.Contains(blockDisabled, "--icons=never") {
 		t.Errorf("expected eza --icons=never when NerdFonts=false")
 	}
-	if !strings.Contains(blockDisabled, "alias lls=\"eza --icons=never --colour=always --sort=modified\"") {
-		t.Errorf("expected lls alias with --icons=never in config block")
+	if !strings.Contains(blockDisabled, "alias lls=\"eza --long --icons=never --colour=always --sort=modified\"") {
+		t.Errorf("expected lls alias with --long and --icons=never in config block")
 	}
+
 }
 
 

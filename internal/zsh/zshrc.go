@@ -183,7 +183,7 @@ func GenerateConfigBlock(opts ConfigOptions, paths *ConfigPaths) (string, error)
 			"  alias ls=\"eza %s --colour=always\"\n"+
 			"  alias la=\"eza -alog --git %s --colour=always\"\n"+
 			"  alias ll=\"eza -log --git %s --colour=always\"\n"+
-			"  alias lls=\"eza %s --colour=always --sort=modified\"\n"+
+			"  alias lls=\"eza --long %s --colour=always --sort=modified\"\n"+
 			"fi\n\n", iconFlag, iconFlag, iconFlag, iconFlag))
 	}
 
