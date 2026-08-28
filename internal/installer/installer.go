@@ -7,6 +7,9 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
+	"strings"
+	"time"
 
 	"github.com/notasandworm/bzsh/internal/distro"
 	"github.com/notasandworm/bzsh/internal/ui"
@@ -168,7 +171,7 @@ func RunSetup(interactive bool) error {
 	return nil
 }
 
-// RunUpdate refreshes embedded scripts and updates the bzsh binary.
+// RunUpdate refreshes embedded scripts, downloads the latest remote binary, and updates configuration.
 func RunUpdate() error {
 	ui.PrintTitle()
 	ui.PrintStep("Starting update check...")
@@ -178,21 +181,68 @@ func RunUpdate() error {
 		return err
 	}
 
-	// Refresh embedded scripts in ~/.config/bzsh/
+	// 1. Refresh embedded scripts in ~/.config/bzsh/
 	ui.PrintStep(fmt.Sprintf("Refreshing script files in %s...", paths.ConfigDir))
 	_ = zsh.WriteEmbeddedScript("prompt.bzsh", paths.ConfigDir)
 	_ = zsh.WriteEmbeddedScript("autocomplete.bzsh", paths.ConfigDir)
 	_ = zsh.WriteEmbeddedScript("nvim-update.bzsh", paths.ConfigDir)
 
-	// Copy current executable to ~/.local/bin/bzsh if running from elsewhere
-	selfExecutable, err := os.Executable()
-	if err == nil {
-		destBinary := filepath.Join(paths.BinDir, "bzsh")
-		if selfExecutable != destBinary {
-			data, err := os.ReadFile(selfExecutable)
-			if err == nil {
+	// 2. Download and update binary in ~/.local/bin/bzsh
+	destBinary := filepath.Join(paths.BinDir, "bzsh")
+	updatedBinary := false
+
+	branch := os.Getenv("BZSH_BRANCH")
+	if branch == "" {
+		branch = "main"
+	}
+
+	arch := runtime.GOARCH
+	rawURL := fmt.Sprintf("https://raw.githubusercontent.com/notasandworm/bzsh/%s/bzsh", branch)
+	releaseURL := fmt.Sprintf("https://github.com/notasandworm/bzsh/releases/latest/download/bzsh-linux-%s", arch)
+
+	ui.PrintStep("Fetching latest bzsh binary from remote...")
+	tempBinary := filepath.Join(paths.BinDir, ".bzsh.update.tmp")
+
+	// Try downloading raw branch binary first, then release asset
+	downloadErr := downloadBinaryFile(rawURL, tempBinary)
+	if downloadErr != nil {
+		downloadErr = downloadBinaryFile(releaseURL, tempBinary)
+	}
+
+	if downloadErr == nil {
+		_ = os.Chmod(tempBinary, 0755)
+
+		// Unlink old binary first to avoid Linux ETXTBSY on running executable
+		_ = os.Remove(destBinary)
+		if err := os.Rename(tempBinary, destBinary); err != nil {
+			if data, readErr := os.ReadFile(tempBinary); readErr == nil {
 				_ = os.WriteFile(destBinary, data, 0755)
 			}
+			_ = os.Remove(tempBinary)
+		}
+		updatedBinary = true
+		ui.PrintOK(fmt.Sprintf("Installed latest bzsh binary to %s", destBinary))
+	} else {
+		// Fallback: If running from a local workspace build, copy self
+		selfExecutable, err := os.Executable()
+		if err == nil && selfExecutable != destBinary {
+			if data, err := os.ReadFile(selfExecutable); err == nil {
+				_ = os.Remove(destBinary)
+				_ = os.WriteFile(destBinary, data, 0755)
+				updatedBinary = true
+				ui.PrintOK("Updated binary from local executable.")
+			}
+		} else {
+			ui.PrintWarn(fmt.Sprintf("Could not download remote binary: %v. Scripts were updated.", downloadErr))
+		}
+	}
+
+	// 3. If binary was updated, query its version
+	if updatedBinary {
+		cmd := exec.Command(destBinary, "version")
+		if output, err := cmd.Output(); err == nil {
+			trimmed := strings.TrimSpace(string(output))
+			ui.PrintOK(fmt.Sprintf("Active binary: %s", trimmed))
 		}
 	}
 
@@ -311,4 +361,45 @@ func downloadFontFile(url string, dest string) error {
 	_, err = io.Copy(out, resp.Body)
 	return err
 }
+
+func downloadBinaryFile(url string, dest string) error {
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+	}
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return err
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("HTTP %d from %s", resp.StatusCode, url)
+	}
+
+	out, err := os.OpenFile(dest, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0755)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	written, err := io.Copy(out, resp.Body)
+	if err != nil {
+		_ = os.Remove(dest)
+		return err
+	}
+
+	// Sanity check: ELF binaries for bzsh are > 1MB. If less than 100KB, it's an invalid binary / error page.
+	if written < 100*1024 {
+		_ = os.Remove(dest)
+		return fmt.Errorf("downloaded file too small (%d bytes), likely invalid binary", written)
+	}
+
+	return nil
+}
+
 
