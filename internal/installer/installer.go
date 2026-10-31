@@ -61,11 +61,6 @@ func RunSetup(interactive bool) error {
 
 	// 2. Check optional tools
 	features := []string{"eza", "bat", "zoxide", "fd-find"}
-	if !adapter.NeedsNvimUpdater() {
-		// On Arch, neovim is available directly in the official 'extra' repo!
-		features = append(features, "neovim")
-	}
-
 	missingPkgs, err := adapter.CheckMissingPackages(features)
 	if err != nil {
 		return err
@@ -100,11 +95,6 @@ func RunSetup(interactive bool) error {
 	}
 
 	// 5. Gather feature choices
-	var nvimUpdaterChoice bool
-	if adapter.NeedsNvimUpdater() {
-		nvimUpdaterChoice = ui.AskYesNo("Add Neovim updater (update-nvim) helper function?", true, autoYes)
-	}
-
 	if !autoYes {
 		ui.PrintNerdFontTest()
 	}
@@ -120,7 +110,6 @@ func RunSetup(interactive bool) error {
 		EzaAliases:        ui.AskYesNo("Set up ls aliases using eza?", true, autoYes),
 		BatAlias:          adapter.GetBatAlias(),
 		Zoxide:            ui.AskYesNo("Enable zoxide directory jumper?", true, autoYes),
-		NvimUpdater:       nvimUpdaterChoice,
 		AddToPath:         ui.AskYesNo(fmt.Sprintf("Add %s to your shell PATH?", paths.BinDir), true, autoYes),
 	}
 
@@ -185,7 +174,6 @@ func RunUpdate() error {
 	ui.PrintStep(fmt.Sprintf("Refreshing script files in %s...", paths.ConfigDir))
 	_ = zsh.WriteEmbeddedScript("prompt.bzsh", paths.ConfigDir)
 	_ = zsh.WriteEmbeddedScript("autocomplete.bzsh", paths.ConfigDir)
-	_ = zsh.WriteEmbeddedScript("nvim-update.bzsh", paths.ConfigDir)
 
 	// 2. Download and update binary in ~/.local/bin/bzsh
 	destBinary := filepath.Join(paths.BinDir, "bzsh")

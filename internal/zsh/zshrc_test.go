@@ -148,7 +148,7 @@ export BACKUP_POST="ok"
 }
 
 func TestEmbeddedScriptsMatchRoot(t *testing.T) {
-	scripts := []string{"prompt.bzsh", "autocomplete.bzsh", "nvim-update.bzsh"}
+	scripts := []string{"prompt.bzsh", "autocomplete.bzsh"}
 
 	for _, script := range scripts {
 		embeddedData, err := GetEmbeddedScript(script)

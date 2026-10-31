@@ -21,7 +21,6 @@ type Adapter interface {
 	GetBatAlias() string
 	NeedsFdSymlink() bool
 	GetFdTargetBinary() string
-	NeedsNvimUpdater() bool // Debian needs update-nvim AppImage function, Arch uses native 'neovim' from extra repo!
 }
 
 // CommandExists checks if a binary exists in the user's PATH.

@@ -3,3 +3,7 @@ AGENTS.md
 *.scratch
 *.plan
 *.idea
+
+# Binaries
+/bzsh
+

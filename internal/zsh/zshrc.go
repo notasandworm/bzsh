@@ -33,7 +33,6 @@ type ConfigOptions struct {
 	Zoxide              bool
 	FdSymlink           bool
 	FdTarget            string
-	NvimUpdater         bool
 	AddToPath           bool
 }
 
@@ -200,16 +199,7 @@ func GenerateConfigBlock(opts ConfigOptions, paths *ConfigPaths) (string, error)
 			"fi\n\n")
 	}
 
-	// 9. Neovim Updater Helper
-	if opts.NvimUpdater {
-		if err := WriteEmbeddedScript("nvim-update.bzsh", paths.ConfigDir); err != nil {
-			return "", err
-		}
-		nvimPath := filepath.Join(paths.ConfigDir, "nvim-update.bzsh")
-		sb.WriteString(fmt.Sprintf("# Neovim Updater Helper\n[[ -f \"%s\" ]] && source \"%s\"\n\n", nvimPath, nvimPath))
-	}
-
-	// 10. Local bin path
+	// 9. Local bin path
 	if opts.AddToPath {
 		sb.WriteString(fmt.Sprintf("# Include local bin in PATH\nexport PATH=\"$PATH:%s\"\n\n", paths.BinDir))
 	}

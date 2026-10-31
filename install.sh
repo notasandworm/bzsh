@@ -1,12 +1,11 @@
 #!/bin/sh
 # ------------------------------------------------------------------------------
-# 󰅶 Busy Shell (bzsh) - Binary Downloader
+# 󰅶 Busy Shell (bzsh) - Installer
 # ------------------------------------------------------------------------------
-# Hey! This script downloads the pre-compiled bzsh binary directly into
-# ~/.local/bin/bzsh so you don't have to compile anything manually.
-#
-# Once downloaded, just run:
-#   bzsh setup
+# Usage:
+#   curl -fsSL https://raw.githubusercontent.com/notasandworm/bzsh/main/install.sh | sh
+#   curl -fsSL ... | sh -s -- -i          # Interactive setup
+#   curl -fsSL ... | sh -s -- --no-setup  # Download binary only
 
 set -e
 
@@ -18,9 +17,9 @@ echo "➜ Downloading Busy Shell (bzsh) binary..."
 # Determine architecture
 ARCH=$(uname -m)
 case "$ARCH" in
-  x86_64)  ARCH_NAME="amd64" ;;
+  x86_64)        ARCH_NAME="amd64" ;;
   aarch64|arm64) ARCH_NAME="arm64" ;;
-  *)       ARCH_NAME="amd64" ;;
+  *)             ARCH_NAME="amd64" ;;
 esac
 
 BRANCH="${BZSH_BRANCH:-main}"
@@ -40,36 +39,44 @@ download_file() {
   return 1
 }
 
-# 1. If BZSH_BRANCH is set (e.g. BZSH_BRANCH=dev), prioritize raw branch binary for testing
-if [ -n "$BZSH_BRANCH" ]; then
+# 1. Local workspace fallback (for testing inside repo)
+if [ -f "./bzsh" ]; then
+  echo "➜ Using local bzsh binary..."
+  cp ./bzsh "$BIN_DIR/bzsh" && DOWNLOAD_SUCCESS=1
+fi
+
+# 2. Local Go build fallback (if running inside repo and go is available)
+if [ "$DOWNLOAD_SUCCESS" -ne 1 ] && [ -f "./main.go" ] && command -v go >/dev/null 2>&1; then
+  echo "➜ Compiling bzsh from local source..."
+  if go build -o "$BIN_DIR/bzsh" main.go; then
+    DOWNLOAD_SUCCESS=1
+  fi
+fi
+
+# 3. If BZSH_BRANCH is explicitly set (e.g. BZSH_BRANCH=dev), try raw branch binary
+if [ "$DOWNLOAD_SUCCESS" -ne 1 ] && [ -n "$BZSH_BRANCH" ]; then
   echo "➜ Fetching bzsh binary from '${BZSH_BRANCH}' branch..."
   if download_file "$RAW_URL" "$BIN_DIR/bzsh"; then
     DOWNLOAD_SUCCESS=1
   fi
 fi
 
-# 2. Attempt download from GitHub Release assets (standard release install)
+# 4. Attempt download from GitHub Release assets (standard release install)
 if [ "$DOWNLOAD_SUCCESS" -ne 1 ]; then
   if download_file "$BINARY_URL" "$BIN_DIR/bzsh"; then
     DOWNLOAD_SUCCESS=1
   fi
 fi
 
-# 3. Fallback: Attempt download from raw GitHub repository
+# 5. Fallback: Attempt download from raw GitHub repository
 if [ "$DOWNLOAD_SUCCESS" -ne 1 ]; then
   if download_file "$RAW_URL" "$BIN_DIR/bzsh"; then
     DOWNLOAD_SUCCESS=1
   fi
 fi
 
-# 3. Fallback: Copy local workspace binary if available
-if [ "$DOWNLOAD_SUCCESS" -ne 1 ] && [ -f ./bzsh ]; then
-  echo "➜ Using local bzsh binary..."
-  cp ./bzsh "$BIN_DIR/bzsh" && DOWNLOAD_SUCCESS=1
-fi
-
 if [ "$DOWNLOAD_SUCCESS" -ne 1 ] || [ ! -f "$BIN_DIR/bzsh" ]; then
-  echo "❌ Error: Failed to download or locate bzsh binary." >&2
+  echo "❌ Error: Failed to download or build bzsh binary." >&2
   exit 1
 fi
 
@@ -81,5 +88,36 @@ if [ -n "$INSTALLED_VER" ]; then
 else
   echo "✔ Successfully installed bzsh binary to $BIN_DIR/bzsh!"
 fi
-echo "➜ Run 'bzsh setup' to start the installation."
+
+# Parse flags passed to install.sh
+NO_SETUP=0
+INTERACTIVE=0
+
+for arg in "$@"; do
+  case "$arg" in
+    --no-setup|-s) NO_SETUP=1 ;;
+    -i|--interactive) INTERACTIVE=1 ;;
+  esac
+done
+
+if [ "$NO_SETUP" -eq 1 ]; then
+  echo "➜ Binary installed at $BIN_DIR/bzsh."
+  echo "➜ To configure your shell at any time, run: $BIN_DIR/bzsh setup"
+  echo ""
+  exit 0
+fi
+
+# Reconnect stdin to /dev/tty if stdin is piped (e.g. curl -fsSL ... | sh) and a controlling terminal exists
+if [ ! -t 0 ]; then
+  if (exec < /dev/tty) 2>/dev/null; then
+    exec < /dev/tty
+  fi
+fi
+
 echo ""
+echo "➜ Running bzsh setup..."
+if [ "$INTERACTIVE" -eq 1 ]; then
+  "$BIN_DIR/bzsh" setup -i
+else
+  "$BIN_DIR/bzsh" setup
+fi

@@ -21,19 +21,21 @@ I started this project after using nerd font capable prompt decorators like [Sta
 
 ## 🚀 Quick Install 
 
-Installer installs Bzsh, [Eza](https://github.com/eza-community/eza), [bat](https://github.com/sharkdp/bat), [zoxide](https://github.com/ajeetdsouza/zoxide) as needed
+One-line installer downloads `bzsh`, configures your shell, and installs modern CLI tools ([Eza](https://github.com/eza-community/eza), [bat](https://github.com/sharkdp/bat), [zoxide](https://github.com/ajeetdsouza/zoxide), [fd](https://github.com/sharkdp/fd)) as needed:
 
-1. Download the bzsh binary
 ```bash
 curl -fsSL https://raw.githubusercontent.com/notasandworm/bzsh/main/install.sh | sh
 ```
 
-2. Run setup to configure your shell
-```bash
-bzsh setup
-```
+*(Note: The installer runs non-interactively with auto-yes by default. Append `-s -- -i` if you prefer to toggle features interactively!)*
 
-*(Note: `bzsh setup` runs non-interactively with auto-yes by default. Run `bzsh setup -i` if you prefer to toggle features interactively!)*
+```bash
+# Interactive setup:
+curl -fsSL https://raw.githubusercontent.com/notasandworm/bzsh/main/install.sh | sh -s -- -i
+
+# Binary download only (skip setup):
+curl -fsSL https://raw.githubusercontent.com/notasandworm/bzsh/main/install.sh | sh -s -- --no-setup
+```
 
 ---
 
@@ -73,7 +75,6 @@ Once installed, the `bzsh` binary is available in your PATH at `~/.local/bin/bzs
   - `zoxide` integration for jumping around folders fast.
   - Automatically handles Debian's `fd-find` naming quirk while maintaining native `fd` on Arch.
 - **Nerd Fonts & Dual-Mode Symbol Support**: Rich icon mode with automatic clean text fallback for systems without Nerd Fonts installed (`bzsh font` command included).
-- **Neovim Updater**: Installs an `update-nvim` helper function to pull and link the latest Neovim AppImage directly.
 
 ---
 

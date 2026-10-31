@@ -47,10 +47,6 @@ func (a *ArchAdapter) CheckMissingPackages(features []string) ([]FeaturePackage,
 			if !CommandExists("zoxide") {
 				missing = append(missing, FeaturePackage{LogicalName: "zoxide", PackageName: "zoxide", BinaryName: "zoxide"})
 			}
-		case "neovim":
-			if !CommandExists("nvim") {
-				missing = append(missing, FeaturePackage{LogicalName: "neovim", PackageName: "neovim", BinaryName: "nvim"})
-			}
 		}
 	}
 
@@ -96,10 +92,4 @@ func (a *ArchAdapter) GetFdTargetBinary() string {
 		return path
 	}
 	return "/usr/bin/fd"
-}
-
-// NeedsNvimUpdater returns false on Arch!
-// Arch provides a fresh, rolling-release Neovim package directly in the 'extra' repository.
-func (a *ArchAdapter) NeedsNvimUpdater() bool {
-	return false
 }
