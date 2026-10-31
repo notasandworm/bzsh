@@ -9,7 +9,7 @@ import (
 	"github.com/notasandworm/bzsh/internal/ui"
 )
 
-// 󰅶 Busy Shell (bzsh) - Go Edition!
+// 󰅶 BZ Shell (bzsh) - Go Edition!
 //
 // Hey! Matt here. Welcome to the Go binary rewrite of bzsh.
 // Built to make installation blazing fast, zero-dependency (embedded zsh configs!),

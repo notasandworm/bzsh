@@ -45,7 +45,7 @@ func RunSetup(interactive bool) error {
 		return err
 	}
 	if len(missingZsh) > 0 {
-		ui.PrintWarn("Zsh is not installed! Zsh is required for Busy Zsh to function.")
+		ui.PrintWarn("Zsh is not installed! Zsh is required for bzsh to function.")
 		if ui.AskYesNo("Would you like to install Zsh using your package manager?", true, autoYes) {
 			if err := adapter.InstallPackages([]string{missingZsh[0].PackageName}); err != nil {
 				return err
@@ -102,9 +102,9 @@ func RunSetup(interactive bool) error {
 
 	opts := zsh.ConfigOptions{
 		NerdFonts:         nerdFontChoice,
-		PromptDecorator:   ui.AskYesNo("Set Busy Shell as prompt decorator?", true, autoYes),
-		Autocomplete:      ui.AskYesNo("Enable Busy Shell Autocomplete system?", true, autoYes),
-		HistorySettings:   ui.AskYesNo("Allow Busy Shell to configure Zsh History settings?", true, autoYes),
+		PromptDecorator:   ui.AskYesNo("Set BZSH as prompt decorator?", true, autoYes),
+		Autocomplete:      ui.AskYesNo("Enable BZSH Autocomplete system?", true, autoYes),
+		HistorySettings:   ui.AskYesNo("Allow BZSH to configure Zsh History settings?", true, autoYes),
 		KeybindingsSearch: ui.AskYesNo("Enable arrow-key history prefix searching?", true, autoYes),
 		ShellOptions:      ui.AskYesNo("Enable auto-cd and suppress beep alerts?", true, autoYes),
 		EzaAliases:        ui.AskYesNo("Set up ls aliases using eza?", true, autoYes),

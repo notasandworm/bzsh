@@ -1,6 +1,6 @@
 #!/bin/sh
 # ------------------------------------------------------------------------------
-# 󰅶 Busy Shell (bzsh) - Installer
+# 󰅶 BZ Shell (bzsh) - Installer
 # ------------------------------------------------------------------------------
 # Usage:
 #   curl -fsSL https://raw.githubusercontent.com/notasandworm/bzsh/main/install.sh | sh
@@ -12,7 +12,7 @@ set -e
 BIN_DIR="$HOME/.local/bin"
 mkdir -p "$BIN_DIR"
 
-echo "➜ Downloading Busy Shell (bzsh) binary..."
+echo "➜ Downloading BZ Shell (bzsh) binary..."
 
 # Determine architecture
 ARCH=$(uname -m)

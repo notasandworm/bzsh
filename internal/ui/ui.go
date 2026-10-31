@@ -22,10 +22,10 @@ const (
 // Can be overridden at build time via -ldflags "-X github.com/notasandworm/bzsh/internal/ui.Version=vX.Y.Z"
 var Version = "v2026.10.31"
 
-// PrintTitle outputs our signature Busy Shell (bzsh) header!
+// PrintTitle outputs our signature BZ Shell (bzsh) header!
 func PrintTitle() {
 	fmt.Println()
-	fmt.Printf("%s󰅶 Busy Shell (bzsh) CLI %s%s\n", ColorBlue, Version, ColorReset)
+	fmt.Printf("%s󰅶 BZ Shell (bzsh) CLI %s%s\n", ColorBlue, Version, ColorReset)
 	fmt.Printf("%s=============================%s\n\n", ColorBlue, ColorReset)
 }
 
@@ -84,7 +84,7 @@ func PrintShellChangePrompt() {
 // PrintFooter shows our warm closing thank-you note.
 func PrintFooter() {
 	fmt.Println()
-	fmt.Printf("%s♥ Thank you for using Busy Shell!%s\n", ColorGreen, ColorReset)
+	fmt.Printf("%s♥ Thank you for using BZ Shell!%s\n", ColorGreen, ColorReset)
 	fmt.Printf("%s✉ For queries, feedback, or issues, email notasandworm@gmail.com%s\n\n", ColorCyan, ColorReset)
 }
 

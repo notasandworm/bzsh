@@ -127,7 +127,7 @@ func GenerateConfigBlock(opts ConfigOptions, paths *ConfigPaths) (string, error)
 			return "", err
 		}
 		promptPath := filepath.Join(paths.ConfigDir, "prompt.bzsh")
-		sb.WriteString(fmt.Sprintf("# Busy Shell (bzsh) Prompt Decorator\n[[ -f \"%s\" ]] && source \"%s\"\n\n", promptPath, promptPath))
+		sb.WriteString(fmt.Sprintf("# BZ Shell (bzsh) Prompt Decorator\n[[ -f \"%s\" ]] && source \"%s\"\n\n", promptPath, promptPath))
 	} else {
 		sb.WriteString("# Simple prompt setup\nautoload -Uz promptinit && promptinit\nprompt adam1\n\n")
 	}
@@ -138,7 +138,7 @@ func GenerateConfigBlock(opts ConfigOptions, paths *ConfigPaths) (string, error)
 			return "", err
 		}
 		autoPath := filepath.Join(paths.ConfigDir, "autocomplete.bzsh")
-		sb.WriteString(fmt.Sprintf("# Busy Shell (bzsh) Autocomplete\n[[ -f \"%s\" ]] && source \"%s\"\n\n", autoPath, autoPath))
+		sb.WriteString(fmt.Sprintf("# BZ Shell (bzsh) Autocomplete\n[[ -f \"%s\" ]] && source \"%s\"\n\n", autoPath, autoPath))
 	}
 
 	// 3. History Settings

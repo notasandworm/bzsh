@@ -1,5 +1,5 @@
 # ------------------------------------------------------------------------------
-# 󰅶 Busy Shell (bzsh) Prompt 
+# 󰅶 BZ Shell (bzsh) Prompt 
 # ------------------------------------------------------------------------------
 # Enable parameter/command expansion & load Zsh datetime/hook modules
 setopt PROMPT_SUBST

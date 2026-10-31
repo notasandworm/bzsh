@@ -1,4 +1,4 @@
-# 󰅶 Busy Shell (bzsh)
+# 󰅶 BZ Shell (bzsh)
 
 BzSh configures a beautiful prompt, sets up handy autocomplete, tunes history, and plugs in modern CLI tools like `eza`, `bat`, and `zoxide`.
 
