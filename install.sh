@@ -65,6 +65,8 @@ fi
 if [ "$DOWNLOAD_SUCCESS" -ne 1 ]; then
   if download_file "$BINARY_URL" "$BIN_DIR/bzsh"; then
     DOWNLOAD_SUCCESS=1
+  elif download_file "https://github.com/notasandworm/bzsh/releases/latest/download/bzsh" "$BIN_DIR/bzsh"; then
+    DOWNLOAD_SUCCESS=1
   fi
 fi
 
@@ -107,17 +109,25 @@ if [ "$NO_SETUP" -eq 1 ]; then
   exit 0
 fi
 
-# Reconnect stdin to /dev/tty if stdin is piped (e.g. curl -fsSL ... | sh) and a controlling terminal exists
-if [ ! -t 0 ]; then
-  if (exec < /dev/tty) 2>/dev/null; then
-    exec < /dev/tty
-  fi
-fi
-
 echo ""
 echo "➜ Running bzsh setup..."
-if [ "$INTERACTIVE" -eq 1 ]; then
-  "$BIN_DIR/bzsh" setup -i
+
+# Pass /dev/tty to setup if available so interactive prompts & sudo work cleanly when piped
+SETUP_TTY=""
+if [ -r /dev/tty ] && (exec < /dev/tty) 2>/dev/null; then
+  SETUP_TTY="/dev/tty"
+fi
+
+if [ -n "$SETUP_TTY" ]; then
+  if [ "$INTERACTIVE" -eq 1 ]; then
+    "$BIN_DIR/bzsh" setup -i <"$SETUP_TTY"
+  else
+    "$BIN_DIR/bzsh" setup <"$SETUP_TTY"
+  fi
 else
-  "$BIN_DIR/bzsh" setup
+  if [ "$INTERACTIVE" -eq 1 ]; then
+    "$BIN_DIR/bzsh" setup -i
+  else
+    "$BIN_DIR/bzsh" setup
+  fi
 fi

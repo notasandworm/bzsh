@@ -192,13 +192,17 @@ func RunUpdate() error {
 
 	arch := runtime.GOARCH
 	releaseURL := fmt.Sprintf("https://github.com/notasandworm/bzsh/releases/latest/download/bzsh-linux-%s", arch)
+	fallbackReleaseURL := "https://github.com/notasandworm/bzsh/releases/latest/download/bzsh"
 	rawURL := fmt.Sprintf("https://raw.githubusercontent.com/notasandworm/bzsh/%s/bzsh", branch)
 
 	ui.PrintStep("Fetching latest bzsh binary from remote...")
 	tempBinary := filepath.Join(paths.BinDir, ".bzsh.update.tmp")
 
-	// Try downloading release asset first, then raw branch binary
+	// Try downloading release asset (arch-specific or generic), then raw branch binary
 	downloadErr := downloadBinaryFile(releaseURL, tempBinary)
+	if downloadErr != nil {
+		downloadErr = downloadBinaryFile(fallbackReleaseURL, tempBinary)
+	}
 	if downloadErr != nil {
 		downloadErr = downloadBinaryFile(rawURL, tempBinary)
 	}
