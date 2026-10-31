@@ -73,6 +73,11 @@ func main() {
 	case "version", "-v", "--version", "-version":
 		ui.PrintVersion()
 
+	case "_sync-scripts", "refresh-scripts":
+		if err := installer.RefreshScripts(); err != nil {
+			os.Exit(1)
+		}
+
 	case "help", "-h", "--help":
 		showHelp()
 

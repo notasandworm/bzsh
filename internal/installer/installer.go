@@ -160,7 +160,19 @@ func RunSetup(interactive bool) error {
 	return nil
 }
 
-// RunUpdate refreshes embedded scripts, downloads the latest remote binary, and updates configuration.
+// RefreshScripts extracts embedded scripts into ~/.config/bzsh/.
+func RefreshScripts() error {
+	paths, err := zsh.GetDefaultPaths()
+	if err != nil {
+		return err
+	}
+	if err := zsh.WriteEmbeddedScript("prompt.bzsh", paths.ConfigDir); err != nil {
+		return err
+	}
+	return zsh.WriteEmbeddedScript("autocomplete.bzsh", paths.ConfigDir)
+}
+
+// RunUpdate downloads the latest remote binary and refreshes configuration scripts.
 func RunUpdate() error {
 	ui.PrintTitle()
 	ui.PrintStep("Starting update check...")
@@ -170,12 +182,6 @@ func RunUpdate() error {
 		return err
 	}
 
-	// 1. Refresh embedded scripts in ~/.config/bzsh/
-	ui.PrintStep(fmt.Sprintf("Refreshing script files in %s...", paths.ConfigDir))
-	_ = zsh.WriteEmbeddedScript("prompt.bzsh", paths.ConfigDir)
-	_ = zsh.WriteEmbeddedScript("autocomplete.bzsh", paths.ConfigDir)
-
-	// 2. Download and update binary in ~/.local/bin/bzsh
 	destBinary := filepath.Join(paths.BinDir, "bzsh")
 	updatedBinary := false
 
@@ -185,16 +191,16 @@ func RunUpdate() error {
 	}
 
 	arch := runtime.GOARCH
-	rawURL := fmt.Sprintf("https://raw.githubusercontent.com/notasandworm/bzsh/%s/bzsh", branch)
 	releaseURL := fmt.Sprintf("https://github.com/notasandworm/bzsh/releases/latest/download/bzsh-linux-%s", arch)
+	rawURL := fmt.Sprintf("https://raw.githubusercontent.com/notasandworm/bzsh/%s/bzsh", branch)
 
 	ui.PrintStep("Fetching latest bzsh binary from remote...")
 	tempBinary := filepath.Join(paths.BinDir, ".bzsh.update.tmp")
 
-	// Try downloading raw branch binary first, then release asset
-	downloadErr := downloadBinaryFile(rawURL, tempBinary)
+	// Try downloading release asset first, then raw branch binary
+	downloadErr := downloadBinaryFile(releaseURL, tempBinary)
 	if downloadErr != nil {
-		downloadErr = downloadBinaryFile(releaseURL, tempBinary)
+		downloadErr = downloadBinaryFile(rawURL, tempBinary)
 	}
 
 	if downloadErr == nil {
@@ -225,7 +231,18 @@ func RunUpdate() error {
 		}
 	}
 
-	// 3. If binary was updated, query its version
+	// Refresh embedded scripts using the new binary if installed, or self
+	ui.PrintStep(fmt.Sprintf("Refreshing script files in %s...", paths.ConfigDir))
+	if updatedBinary {
+		if err := exec.Command(destBinary, "_sync-scripts").Run(); err != nil {
+			_ = RefreshScripts()
+		}
+	} else {
+		_ = RefreshScripts()
+	}
+	ui.PrintOK("Script files refreshed.")
+
+	// Query active binary version
 	if updatedBinary {
 		cmd := exec.Command(destBinary, "version")
 		if output, err := cmd.Output(); err == nil {

@@ -89,20 +89,55 @@ _os_info() {
 }
 
 _git_status() {
-  local branch
-  branch=$(git branch --show-current 2>/dev/null)
-  [[ -z "$branch" ]] && branch=$(git rev-parse --short HEAD 2>/dev/null)
-  [[ -z "$branch" ]] && return
+  local git_out
+  git_out=$(git status --porcelain=v1 --branch 2>/dev/null) || return
 
-  local dirty=""
-  if [[ -n $(git status --porcelain 2>/dev/null | head -n 1) ]]; then
-    dirty="*"
+  local lines=("${(@f)git_out}")
+  local header="${lines[1]}"
+
+  # Extract branch name from ## branch...upstream [ahead 1, behind 2]
+  local branch="${${header#\#\# }%%...*}"
+  branch="${branch#No commits yet on }"
+  branch="${branch#Initial commit on }"
+  [[ "$branch" == "HEAD (no branch)" || -z "$branch" ]] && branch=$(git rev-parse --short HEAD 2>/dev/null)
+
+  # Check upstream ahead / behind
+  local sync=""
+  if [[ "$header" =~ "ahead ([0-9]+)" ]]; then
+    sync+=" ⇡${match[1]}"
+  fi
+  if [[ "$header" =~ "behind ([0-9]+)" ]]; then
+    sync+=" ⇣${match[1]}"
   fi
 
-  if [[ "$BZSH_NERD_FONTS" == "1" ]]; then
-    echo " %F{magenta} ${branch}${dirty}%f"
+  # Parse staged, unstaged, and untracked counts
+  local staged=0 unstaged=0 untracked=0
+  for line in "${lines[@]:1}"; do
+    local index_stat="${line[1]}"
+    local work_stat="${line[2]}"
+
+    if [[ "$index_stat" == "?" ]]; then
+      (( untracked++ ))
+    else
+      [[ "$index_stat" != " " && "$index_stat" != "?" ]] && (( staged++ ))
+      [[ "$work_stat" != " " && "$work_stat" != "?" ]] && (( unstaged++ ))
+    fi
+  done
+
+  # Build the status badges
+  local details=""
+  (( staged > 0 ))    && details+=" +${staged}"
+  (( unstaged > 0 ))  && details+=" !${unstaged}"
+  (( untracked > 0 )) && details+=" ?${untracked}"
+  [[ -n "$sync" ]]    && details+="$sync"
+
+  local icon=""
+  [[ "$BZSH_NERD_FONTS" != "1" ]] && icon="±"
+
+  if [[ -n "$details" ]]; then
+    echo " %F{magenta}${icon} ${branch}%F{yellow}[${details# }]%f"
   else
-    echo " %F{magenta}+${branch}${dirty}%f"
+    echo " %F{magenta}${icon} ${branch}%f"
   fi
 }
 
@@ -187,6 +222,29 @@ _sdk_info() {
       echo " %F{blue}󰡨 Docker%f"
     else
       echo " %F{blue}[Docker]%f"
+    fi
+
+  else
+    # Check for shell scripts (.sh/.bash in root, or executable scripts in bin/)
+    local sh_match=(*.(sh|bash)(N[1]))
+    local is_sh=0
+    if (( ${#sh_match} > 0 )); then
+      is_sh=1
+    else
+      local bin_exec=(bin/*(*N[1]))
+      if (( ${#bin_exec} > 0 )); then
+        local shebang
+        read -r shebang < "${bin_exec[1]}" 2>/dev/null
+        [[ "$shebang" == *sh* ]] && is_sh=1
+      fi
+    fi
+
+    if (( is_sh == 1 )); then
+      if [[ "$BZSH_NERD_FONTS" == "1" ]]; then
+        echo " %F{green} sh%f"
+      else
+        echo " %F{green}[sh]%f"
+      fi
     fi
   fi
 }
